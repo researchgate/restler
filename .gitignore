@@ -1,0 +1,17 @@
+.idea
+logs
+/*.iml
+/*.ipr
+/*.iws
+/target
+.classpath
+.project
+.settings
+.gradle/
+/gradle
+/gradlew
+/gradlew.bat
+build/
+out/
+classes
+logs
