@@ -1,0 +1,12 @@
+*.iml
+*.ipr
+*.iws
+
+.gradle/
+build/
+target/
+out/
+src/main/resources/serviceinfo/*
+src/main/resources/index/*
+
+

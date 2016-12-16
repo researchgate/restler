@@ -1,0 +1,15 @@
+mongoConfig:
+  uri: "mongodb://localhost:27085/?readPreference=primaryPreferred"
+  dbName: "restler"
+  tls: false
+
+server:
+  type: simple
+  applicationContextPath: "/restler-service"
+  connector:
+      type: http
+      port: 8091
+  minThreads: 20
+  maxThreads: 40
+  registerDefaultExceptionMappers: false
+

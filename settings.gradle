@@ -1,0 +1,4 @@
+rootProject.name = "restler"
+
+include 'restler-core'
+include 'restler-service'
