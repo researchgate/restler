@@ -66,20 +66,6 @@ project(":restler-core") {
         testCompile group: 'junit', name: 'junit', version: '4.11'
         testCompile group: 'org.mockito', name: 'mockito-all', version: '1.+'
     }
-
-    //TODO: change to publish to bintray
-    uploadArchives {
-        repositories.mavenDeployer {
-            repository(url: "https://nexus.rgoffice.net:8081/nexus/content/repositories/releases/") {
-                authentication(userName: "deployment", password: "deployment")
-            }
-            snapshotRepository(url: "https://nexus.rgoffice.net:8081/nexus/content/repositories/snapshots/") {
-                authentication(userName: "deployment", password: "deployment")
-            }
-
-            pom.groupId = 'net.researchgate'
-        }
-    }
 }
 
 project(":restler-service") {
