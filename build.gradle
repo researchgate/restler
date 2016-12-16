@@ -25,13 +25,41 @@ repositories {
 subprojects {
     apply plugin: 'java'
     apply plugin: 'maven'
+    apply plugin: 'com.jfrog.bintray'
+
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+
+
+    bintray {
+        dryRun = false // Whether to run this as dry-run, without deploying
+        publish = false //If version should be auto published after an upload
+
+        user = project.hasProperty('bintrayUser') ? bintrayUser : ''
+        key = project.hasProperty('bintrayApiKey') ? bintrayApiKey : ''
+        configurations = ['archives']
+        pkg {
+            name = 'restler'
+            repo = 'maven'
+            userOrg = 'researchgate'
+            licenses = ['MIT']
+            vcsUrl = 'https://github.com/researchgate/restler.git'
+            issueTrackerUrl = 'https://github.com/researchgate/restler/issues'
+        }
+    }
 
     repositories {
         mavenCentral()
     }
 
-    sourceCompatibility = 1.8
-    targetCompatibility = 1.8
+    task sourcesJar(type: Jar, dependsOn: classes) {
+        classifier = 'sources'
+        from sourceSets.main.allSource
+    }
+
+    artifacts {
+        archives sourcesJar
+    }
 
     test {
         maxHeapSize = '2014m'
@@ -101,5 +129,5 @@ project(":restler-service") {
 
 }
 
-
-afterReleaseBuild.dependsOn subprojects.uploadArchives
+beforeReleaseBuild.dependsOn subprojects.install
+afterReleaseBuild.dependsOn subprojects.bintrayUpload
