@@ -1,6 +1,8 @@
 Restler  
 ======================
 
+[![Build Status](https://travis-ci.org/researchgate/restler.svg?branch=master)](https://travis-ci.org/researchgate/restler)
+
 Restler is a project aiming on providing a unified way to easily build REST-services based on document-oriented databases, like MongoDB. It automatically exposes CRUD operations for domain entities without sacrificng flexibility, should you need some extra functionality or business-logic. 
 
 The project consists of two parts: 
