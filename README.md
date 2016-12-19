@@ -17,7 +17,7 @@ Default CRUD Resource
 
 For the sake of example, let's assume that you have an `Account` entity that you store in MongoDB, that looks as follows:
 
-```
+```java
 // Morphia annotations for MongoDB collection name and indexes and 
 @Entity("accounts")
          @Index(fields = @Field("rating")),
@@ -171,7 +171,9 @@ URL: `/accounts/$id`
 ## Project setup
 You should include restler functionality by including:
 
-```compile group: 'net.researchgate', name: 'restler', version: '$restler-version'```
+```yaml
+compile group: 'net.researchgate', name: 'restler', version: '$restler-version'
+```
 
 ## Exceptions and their mapping
 
