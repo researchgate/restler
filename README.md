@@ -171,7 +171,7 @@ URL: `/accounts/$id`
 ## Project setup
 You should include restler functionality by including:
 
-```yaml
+```gradle
 compile group: 'net.researchgate', name: 'restler', version: '$restler-version'
 ```
 
