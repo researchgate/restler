@@ -3,20 +3,13 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'net.researchgate:gradle-release:2.3.5'
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.6'
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
     }
 }
 
 plugins {
     id 'net.researchgate.release' version '2.3.5'
 }
-
-allprojects {
-    apply plugin: 'java'
-    apply plugin: 'maven'
-}
-
 
 repositories {
     mavenCentral()
@@ -29,7 +22,6 @@ subprojects {
 
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
-
 
     bintray {
         dryRun = false // Whether to run this as dry-run, without deploying
@@ -45,6 +37,13 @@ subprojects {
             licenses = ['MIT']
             vcsUrl = 'https://github.com/researchgate/restler.git'
             issueTrackerUrl = 'https://github.com/researchgate/restler/issues'
+            githubRepo = 'researchgate/restler'
+
+            version {
+                name = rootProject.version
+                vcsTag = rootProject.version
+                released = new Date()
+            }
         }
     }
 
@@ -129,5 +128,9 @@ project(":restler-service") {
 
 }
 
-beforeReleaseBuild.dependsOn subprojects.install
+release {
+    buildTasks = []
+}
+
+beforeReleaseBuild.dependsOn subprojects.build
 afterReleaseBuild.dependsOn subprojects.bintrayUpload
