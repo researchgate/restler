@@ -10,6 +10,6 @@ server:
       type: http
       port: 8091
   minThreads: 20
-  maxThreads: 40
+  maxThreads: 200
   registerDefaultExceptionMappers: false
 
