@@ -8,7 +8,7 @@ Restler is a project aiming on providing a unified way to easily build REST-serv
 The project consists of two parts: 
 
 * **restler-core** - implementation of the query language for REST resources (that's what you should include into your service)
-* **restler-service** - example Dropwizard-based (http://www.dropwizard.io/) web service that uses restler and demonstrates it's features and their testing. For you own service you can simply take this service as a base. 
+* **restler-service** - example Dropwizard-based (http://www.dropwizard.io/) web service that uses restler-core and demonstrates its features. For you own service you can simply take this service as a base.
 
 
 
