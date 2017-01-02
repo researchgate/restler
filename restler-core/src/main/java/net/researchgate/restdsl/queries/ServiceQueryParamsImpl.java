@@ -7,7 +7,6 @@ import java.util.Collections;
 import java.util.Set;
 
 /**
- * Created by zholudev on 21/04/16.
  * Generic implementation
  */
 public class ServiceQueryParamsImpl implements ServiceQueryParams{

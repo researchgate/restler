@@ -20,7 +20,6 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * Created by zholudev on 19/04/16.
  * Account entity
  */
 
@@ -49,6 +48,10 @@ public class Account {
     @JsonDeserialize(using = ObjectIdDeserializer.class)
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private ObjectId mentorAccountId;
+
+    private String newFiled;
+
+    private String oldField;
 
     private Long rating;
 

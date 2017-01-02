@@ -6,7 +6,6 @@ import com.google.common.collect.Sets;
 import java.util.Set;
 
 /**
- * Created by zholudev on 20/04/16.
  * Default params for service query
  */
 public interface ServiceQueryParams {

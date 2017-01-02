@@ -29,7 +29,6 @@ import static javax.ws.rs.core.Response.Status.CREATED;
 
 
 /**
- * Created by zholudev on 14/04/16.
  * Commons methods for CRUD
  * V - entity type
  * K - entity primary key type
