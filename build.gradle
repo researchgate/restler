@@ -11,8 +11,6 @@ plugins {
     id 'net.researchgate.release' version '2.3.5'
 }
 
-group='net.researchgate'
-
 repositories {
     mavenCentral()
 }
@@ -21,6 +19,8 @@ subprojects {
     apply plugin: 'java'
     apply plugin: 'maven'
     apply plugin: 'com.jfrog.bintray'
+
+    group='net.researchgate'
 
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
