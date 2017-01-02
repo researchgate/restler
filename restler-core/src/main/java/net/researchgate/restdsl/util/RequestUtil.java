@@ -1,6 +1,7 @@
 package net.researchgate.restdsl.util;
 
 import com.google.common.base.Splitter;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import net.researchgate.restdsl.domain.EntityInfo;
 import net.researchgate.restdsl.exceptions.RestDslException;
@@ -16,8 +17,6 @@ import javax.ws.rs.core.UriInfo;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Utilities for dealing with requests
@@ -91,8 +90,13 @@ public class RequestUtil {
                 Class<?> fieldClazz = pairOfFieldClazzAndParentClazz.getLeft();
                 Class<?> parentClazz = pairOfFieldClazzAndParentClazz.getRight();
 
-                Stream<?> criteria = splitValues.stream().map(input -> TypeInfoUtil.getValue(input, fieldNameWithoutConditions, fieldClazz, parentClazz));
-                builder.withCriteria(parsedQueryField.getFullCriteria(), criteria.collect(Collectors.toList()));
+//                Stream<?> criteria = splitValues.stream().map(input -> TypeInfoUtil.getValue(input, fieldNameWithoutConditions, fieldClazz, parentClazz));
+
+                List<Object> criteriaList = Lists.newArrayList(Iterables.transform(splitValues,
+                        input -> TypeInfoUtil.getValue(input, fieldNameWithoutConditions, fieldClazz, parentClazz)));
+
+//                builder.withCriteria(parsedQueryField.getFullCriteria(), criteria.collect(Collectors.toList()));
+                builder.withCriteria(parsedQueryField.getFullCriteria(), criteriaList);
 
             }
         }
