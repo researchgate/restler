@@ -11,6 +11,8 @@ plugins {
     id 'net.researchgate.release' version '2.3.5'
 }
 
+group='net.researchgate'
+
 repositories {
     mavenCentral()
 }
