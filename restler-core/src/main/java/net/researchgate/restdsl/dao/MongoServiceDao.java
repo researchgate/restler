@@ -161,10 +161,14 @@ public class MongoServiceDao<V, K> implements PersistentServiceDao<V, K> {
     }
 
     protected V findAndModify(ServiceQuery<K> q, UpdateOperations<V> updateOperations) throws RestDslException {
+        return findAndModify(q, updateOperations, false, false);
+    }
+
+    protected V findAndModify(ServiceQuery<K> q, UpdateOperations<V> updateOperations, boolean oldVersion, boolean createIfMissing) throws RestDslException {
         preUpdate(q, updateOperations);
         Query<V> morphiaQuery = convertToMorphiaQuery(q, false);
         try {
-            return morphiaDao.getDatastore().findAndModify(morphiaQuery, updateOperations, false, false);
+            return morphiaDao.getDatastore().findAndModify(morphiaQuery, updateOperations, oldVersion, createIfMissing);
         } catch (DuplicateKeyException e) {
             throw new RestDslException("Duplicate mongo key: " + e.getMessage(), RestDslException.Type.DUPLICATE_KEY);
         }
