@@ -27,7 +27,7 @@ subprojects {
 
     bintray {
         dryRun = false // Whether to run this as dry-run, without deploying
-        publish = false //If version should be auto published after an upload
+        publish = true //If version should be auto published after an upload
 
         user = project.hasProperty('bintrayUser') ? bintrayUser : ''
         key = project.hasProperty('bintrayApiKey') ? bintrayApiKey : ''

@@ -112,10 +112,10 @@ public abstract class ServiceResource<V, K> {
     @Path("/{segment: .*}")
     @DELETE
     @Produces("application/json")
-    public String delete(@PathParam("segment") PathSegment segment, @Context UriInfo uriInfo) throws RestDslException {
+    public Response delete(@PathParam("segment") PathSegment segment, @Context UriInfo uriInfo) throws RestDslException {
         ServiceQuery<K> query = getQueryFromRequest(segment, uriInfo);
         int deleted = serviceModel.delete(query);
-        return new BasicDBObject("deleted", deleted).toString();
+        return Response.ok().entity(new BasicDBObject("deleted", deleted).toString()).build();
     }
 
 
