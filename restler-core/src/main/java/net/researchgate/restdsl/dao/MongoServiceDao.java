@@ -4,6 +4,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 import com.mongodb.DuplicateKeyException;
 import net.researchgate.restdsl.domain.EntityIndexInfo;
 import net.researchgate.restdsl.domain.EntityInfo;
@@ -17,8 +18,8 @@ import net.researchgate.restdsl.queries.ServiceQueryReservedValue;
 import net.researchgate.restdsl.results.EntityList;
 import net.researchgate.restdsl.results.EntityMultimap;
 import net.researchgate.restdsl.results.EntityResult;
-import net.researchgate.restdsl.util.ServiceQueryUtil;
 import net.researchgate.restdsl.types.TypeInfoUtil;
+import net.researchgate.restdsl.util.ServiceQueryUtil;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.Datastore;
@@ -194,14 +195,37 @@ public class MongoServiceDao<V, K> implements PersistentServiceDao<V, K> {
 
         if (getQuery) {
             if (serviceQuery.getFields() != null) {
+                Set<String> excludedFields = Sets.newHashSet();
+                Set<String> includedFields = Sets.newHashSet();
                 boolean all = false;
                 for (String f : serviceQuery.getFields()) {
                     if (f.equals("*")) {
                         all = true;
+                    } else {
+                        if (f.startsWith("-")) {
+                            excludedFields.add(f.substring(1));
+                        } else {
+                            includedFields.add(f);
+                        }
                     }
                 }
+
+                if (!excludedFields.isEmpty() && !includedFields.isEmpty()) {
+                    throw new RestDslException("Query cannot have both included and excluded fields", RestDslException.Type.QUERY_ERROR);
+                }
+
                 if (!all) {
-                    mongoQuery.retrievedFields(true, serviceQuery.getFields().toArray(new String[serviceQuery.getFields().size()]));
+                    if (!includedFields.isEmpty()) {
+                        mongoQuery.retrievedFields(true, includedFields.toArray(new String[includedFields.size()]));
+                    } else {
+                        // only excluded fields were provided
+                        mongoQuery.retrievedFields(false, excludedFields.toArray(new String[excludedFields.size()]));
+                    }
+                } else {
+                    // provided * but also excluded fields
+                    if (!excludedFields.isEmpty()) {
+                        mongoQuery.retrievedFields(false, excludedFields.toArray(new String[excludedFields.size()]));
+                    }
                 }
             }
 

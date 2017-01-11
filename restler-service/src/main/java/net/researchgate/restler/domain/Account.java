@@ -30,6 +30,7 @@ import java.util.List;
          @Index(fields = {@Field("stats.scoreBreakdown"), @Field(value = "rating", type = IndexType.DESC)}),
          @Index(fields = @Field("nickname"))
  })
+@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 public class Account {
 
     @Id
