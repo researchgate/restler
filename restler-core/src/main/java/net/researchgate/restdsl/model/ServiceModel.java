@@ -3,6 +3,7 @@ package net.researchgate.restdsl.model;
 import net.researchgate.restdsl.dao.PersistentServiceDao;
 import net.researchgate.restdsl.domain.EntityInfo;
 import net.researchgate.restdsl.exceptions.RestDslException;
+import net.researchgate.restdsl.queries.PatchContext;
 import net.researchgate.restdsl.queries.ServiceQuery;
 import net.researchgate.restdsl.queries.ServiceQueryInfo;
 import net.researchgate.restdsl.results.EntityResult;
@@ -10,7 +11,6 @@ import net.researchgate.restdsl.util.BeanUtils;
 
 import java.util.Collections;
 import java.util.Map;
-import java.util.function.Function;
 
 /**
  * General model
@@ -51,18 +51,26 @@ public class ServiceModel<V, K> {
     }
 
 
-    public V patch(V entity) throws RestDslException {
-        K idField = EntityInfo.get((Class<V>)entity.getClass()).getIdFieldValue(entity);
+    public V patch(V entity, PatchContext patchContext) throws RestDslException {
+        K idField = EntityInfo.get((Class<V>) entity.getClass()).getIdFieldValue(entity);
 
         ServiceQuery<K> q = ServiceQuery.byId(idField);
         V oldBean = getOne(idField);
         try {
-            Map<String, Object> diff =
+            Map<String, Object> changes =
                     BeanUtils.shallowDifferences(oldBean, entity, Collections.emptySet(), true, false);
-            if (diff.isEmpty()) {
+            for (String f : patchContext.getUnsetFields()) {
+                if (changes.containsKey(f)) {
+                    throw new RestDslException("Patched field '" + f + "' is also requested to be unset", RestDslException.Type.PARAMS_ERROR);
+                }
+                changes.put(f, null);
+            }
+
+            if (changes.isEmpty()) {
                 return oldBean;
             }
-            return serviceDao.patch(q, diff);
+
+            return serviceDao.patch(q, changes);
         } catch (Exception e) {
             throw new RestDslException("Unable to diff the provided entity with the db entity (class " +
                     entity.getClass().getName() + ")", e, RestDslException.Type.ENTITY_ERROR);
@@ -76,32 +84,6 @@ public class ServiceModel<V, K> {
     // helpers
 
     // this is a guava Preconditions.checkNotNull inspired helper method
-    protected void ensureNotNull(Object value, String fieldName) throws RestDslException {
-        if (value == null) {
-            throw new RestDslException("Field " + fieldName + "must not be null", RestDslException.Type.ENTITY_ERROR);
-        }
-    }
-
-    protected void ensureNotSet(Object value, String fieldName) throws RestDslException {
-        if (value != null) {
-            throw new RestDslException("Field " + fieldName + "must not be set, but got " + value,RestDslException.Type.ENTITY_ERROR);
-        }
-    }
-
-    // throws an exception if the client provides a value for this field and it is different from the base value
-    protected void ensureNotModified(Function<V, ?> getter, V base, V patch) throws RestDslException {
-        if (isModified(getter, base, patch)) {
-            throw new RestDslException("Cannot set " + getter + " from " + getter.apply(base)
-                    + " to " + getter.apply(patch) + " for " + patch, RestDslException.Type.ENTITY_ERROR);
-        }
-    }
-
-    protected boolean isModified(Function<V, ?> f, V base, V patch) {
-        Object patchVal = f.apply(patch);
-        return patchVal != null && !patchVal.equals(f.apply(base));
-    }
-
-
 
 
 }

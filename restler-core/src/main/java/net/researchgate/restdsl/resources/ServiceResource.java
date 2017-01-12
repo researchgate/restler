@@ -26,6 +26,7 @@ import javax.ws.rs.core.UriInfo;
 import java.lang.reflect.ParameterizedType;
 
 import static javax.ws.rs.core.Response.Status.CREATED;
+import static javax.ws.rs.core.Response.Status.OK;
 
 
 /**
@@ -79,9 +80,9 @@ public abstract class ServiceResource<V, K> {
     }
 
     @PATCH
-    public V patchEntity(V entity) throws RestDslException {
+    public V patchEntity(V entity, @Context UriInfo uriInfo) throws RestDslException {
         validatePatchEntity(entity);
-        return serviceModel.patch(entity);
+        return serviceModel.patch(entity, RequestUtil.getPatchContext(uriInfo));
     }
 
     @POST
@@ -102,7 +103,7 @@ public abstract class ServiceResource<V, K> {
 
         entityInfo.setIdFieldValue(entity, key);
         V persisted = serviceModel.save(entity);
-        return Response.status(CREATED).entity(persisted).build();
+        return Response.status(OK).entity(persisted).build();
     }
 
     protected K getId(String id) throws RestDslException {
@@ -123,7 +124,6 @@ public abstract class ServiceResource<V, K> {
         return RequestUtil.parseRequest(entityClazz, idClazz, segment, uriInfo, getServiceQueryParams());
     }
 
-
     protected void validatePostEntity(V entity) throws RestDslException {
         // override if you need extra validation
     }
@@ -131,8 +131,7 @@ public abstract class ServiceResource<V, K> {
     protected void validatePatchEntity(V entity) throws RestDslException {
         K val = entityInfo.getIdFieldValue(entity);
         if (val == null) {
-            throw new RestDslException("Id must be provided when creating a new entity, but was null",
-                    RestDslException.Type.ENTITY_ERROR);
+            throw new RestDslException("Id must be provided when patching an entity, but was null", RestDslException.Type.ENTITY_ERROR);
         }
     }
 
@@ -147,50 +146,4 @@ public abstract class ServiceResource<V, K> {
     protected ServiceQueryParams getServiceQueryParams() {
         return ServiceQueryParams.DEFAULT_QUERY_PARAMS;
     }
-
-    // HELPERS
-//    public <K, V> ServiceQuery<K> parseRequest(Class<V> entityClazz, Class<K> idClazz, PathSegment segment, UriInfo uriInfo) throws RestDslException {
-//
-//        ServiceQuery.ServiceQueryBuilder<K> builder = ServiceQuery.builder();
-//
-//        builder.offset(getInt("offset", uriInfo));
-//        builder.limit(getInt("limit", uriInfo));
-//        builder.fields(getToList("fields", uriInfo));
-//        builder.order(uriInfo.getQueryParameters().getFirst("order"));
-//        builder.indexValidation(getBoolean("indexValidation", uriInfo));
-//        builder.countTotalItems(getBoolean("countTotalItems", uriInfo));
-//        builder.groupBy(getString("groupBy", uriInfo));
-//        builder.withServiceQueryParams(getServiceQueryParams());
-//        builder.syncMatch(getToList("syncMatch", uriInfo));
-//
-//        MultivaluedMap<String, String> matrixParams = segment.getMatrixParameters();
-//        if (!matrixParams.isEmpty()) {
-//            for (String fieldNameWithCriteria : matrixParams.keySet()) {
-//                Collection<String> values = matrixParams.get(fieldNameWithCriteria);
-//                // splitting comma-separated values
-//                Collection<String> splitValues = new ArrayList<>();
-//                for (String v : values) {
-//                    splitValues.addAll(Splitter.on(',').omitEmptyStrings().splitToList(v));
-//                }
-//                ServiceQueryUtil.ParsedQueryField parsedQueryField = ServiceQueryUtil.parseQueryField(fieldNameWithCriteria);
-//                String fieldNameWithoutConditions = parsedQueryField.getFieldName();
-//                Pair<Class<?>, Class<?>> pairOfFieldClazzAndParentClazz =
-//                        TypeInfoUtil.getFieldExpressionClazz(entityClazz, fieldNameWithoutConditions);
-//
-//                Class<?> fieldClazz = pairOfFieldClazzAndParentClazz.getLeft();
-//                Class<?> parentClazz = pairOfFieldClazzAndParentClazz.getRight();
-//
-//                Stream<?> criteria = splitValues.stream().map(input -> TypeInfoUtil.getValue(input, fieldNameWithoutConditions, fieldClazz, parentClazz));
-//                builder.withCriteria(parsedQueryField.getFullCriteria(), criteria.collect(Collectors.toList()));
-//
-//            }
-//        }
-//        if (!StringUtils.isEmpty(segment.getPath()) && !segment.getPath().startsWith("-")) {
-//            builder.ids(Lists.transform(Splitter.on(',').splitToList(segment.getPath()),
-//                    input -> TypeInfoUtil.getValue(input, EntityInfo.get(entityClazz).getIdFieldName(), idClazz, entityClazz)));
-//        }
-//
-//        return builder.build();
-//    }
-
 }

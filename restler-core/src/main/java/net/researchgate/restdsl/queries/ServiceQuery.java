@@ -195,13 +195,6 @@ public final class ServiceQuery<K> {
             return this;
         }
 
-        // varargs are BAD.
-        // e.g. List<K> can be considered as 1 element arrays of List<K>
-//        public ServiceQueryBuilder<K> ids(K... idList) {
-//            query.idList = Arrays.asList(idList);
-//            return this;
-//        }
-
         public ServiceQueryBuilder<K> id(K id) {
             query.ids = Collections.singletonList(id);
             return this;

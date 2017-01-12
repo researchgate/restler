@@ -1,6 +1,7 @@
 package net.researchgate.restler.service.resources;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -8,6 +9,7 @@ import io.dropwizard.jersey.guava.OptionalMessageBodyWriter;
 import io.dropwizard.jersey.guava.OptionalParamFeature;
 import io.dropwizard.testing.junit.ResourceTestRule;
 import net.researchgate.restdsl.exceptions.RestDslException;
+import net.researchgate.restdsl.queries.PatchContext;
 import net.researchgate.restdsl.queries.ServiceQuery;
 import net.researchgate.restdsl.results.EntityList;
 import net.researchgate.restdsl.results.EntityMultimap;
@@ -281,10 +283,17 @@ public class AccountResourceTest extends AbstractMongoDBTest {
 
         assertEquals(account, patchedAccount);
 
-        Account returnedAccount = accountModel.patch(newAccount);
+        Account returnedAccount = accountModel.patch(newAccount, PatchContext.DEFAULT_CONTEXT);
         assertEquals(patchedAccount.getId(), returnedAccount.getId());
         assertEquals(account.getNickname(), returnedAccount.getNickname());
         assertEquals(account.getPublicationUids(), returnedAccount.getPublicationUids());
+
+        returnedAccount = accountModel.patch(returnedAccount,
+                PatchContext.builder().unsetFields(Sets.newHashSet("publicationUids", "nickname")).build());
+        assertEquals(patchedAccount.getId(), returnedAccount.getId());
+
+        assertEquals(null, returnedAccount.getNickname());
+        assertEquals(null, returnedAccount.getPublicationUids());
     }
 
     private Account getPatchedAccount(Account newAccount) {
@@ -322,10 +331,6 @@ public class AccountResourceTest extends AbstractMongoDBTest {
 
         for (int limit = 0; limit < 2 * total; limit++) {
             for (int offset = 0; offset < 2 * total; offset++) {
-                if (offset == 11) {
-                    int dsf = 0;
-                }
-
                 res = accountModel.get(ServiceQuery.<ObjectId>builder().limit(limit).offset(offset).build());
                 assertTrue("For limit=" + limit + " and offset=" + offset, res.getTotalItems() == total);
                 assertTrue(res.getList().getItems().size() <= limit);

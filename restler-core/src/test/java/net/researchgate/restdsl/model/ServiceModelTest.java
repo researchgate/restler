@@ -11,6 +11,9 @@ import org.mockito.Mockito;
 
 import java.util.Collections;
 
+import static net.researchgate.restdsl.validation.RestlerPreconditions.ensureNotModified;
+import static net.researchgate.restdsl.validation.RestlerPreconditions.ensureNotNull;
+import static net.researchgate.restdsl.validation.RestlerPreconditions.ensureNotSet;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -33,14 +36,14 @@ public class ServiceModelTest {
         TestEntity dbEntry = new TestEntity(5L, "v");
 
         // not set
-        model.ensureNotModified(TestEntity::getId, dbEntry, new TestEntity(null, "v"));
+        ensureNotModified(TestEntity::getId, dbEntry, new TestEntity(null, "v"));
 
         // set to same value
-        model.ensureNotModified(TestEntity::getId, dbEntry, new TestEntity(5L, "v"));
+        ensureNotModified(TestEntity::getId, dbEntry, new TestEntity(5L, "v"));
 
         // set to different value
         try {
-            model.ensureNotModified(TestEntity::getId, dbEntry, new TestEntity(6L, "v"));
+            ensureNotModified(TestEntity::getId, dbEntry, new TestEntity(6L, "v"));
             fail();
         } catch (RestDslException e) {
             System.out.println(e);
@@ -52,12 +55,12 @@ public class ServiceModelTest {
     public void testCheckNotSet() {
         setUp();
         // not set
-        model.ensureNotSet(new TestEntity().getId(), "entityId");
+        ensureNotSet(new TestEntity().getId(), "entityId");
 
         // set
         TestEntity patch = new TestEntity(1L, "val");
         try {
-            model.ensureNotSet(patch.getId(), "entityId");
+            ensureNotSet(patch.getId(), "entityId");
             fail();
         } catch (RestDslException e) {
             System.out.println(e);
@@ -69,11 +72,11 @@ public class ServiceModelTest {
     public void testCheckNotNull() throws Exception {
         setUp();
         // set
-        model.ensureNotNull(new TestEntity(1L, "val").getId(), "entityId");
+        ensureNotNull(new TestEntity(1L, "val").getId(), "entityId");
 
         // not set
         try {
-            model.ensureNotNull(new TestEntity().getId(), "entityId");
+            ensureNotNull(new TestEntity().getId(), "entityId");
             fail();
         } catch (RestDslException e) {
             System.out.println(e);

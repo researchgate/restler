@@ -4,8 +4,10 @@ package net.researchgate.restdsl.exceptions;
  * Represents general REST DSL exception
  */
 public class RestDslException extends RuntimeException {
+    //TODO: generialize types, rethink them.
+    // TODO: need something like generic conflict state
     public enum Type {
-        // DB contraint violation
+        // DB constraint violation
         DUPLICATE_KEY,
 
         // Entity provided is not valid
