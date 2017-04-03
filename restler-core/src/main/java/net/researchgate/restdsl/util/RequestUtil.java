@@ -78,6 +78,15 @@ public class RequestUtil {
     }
 
     public static <K, V> ServiceQuery<K> parseRequest(Class<V> entityClazz, Class<K> idClazz, PathSegment segment, UriInfo uriInfo, ServiceQueryParams serviceQueryParams) throws RestDslException {
+        return parseCommonParameters(entityClazz, idClazz, segment, uriInfo, serviceQueryParams)
+                .build();
+    }
+
+    public static <K, V> ServiceQuery.ServiceQueryBuilder<K> parseCommonParameters(Class<V> entityClazz,
+                                                                                    Class<K> idClazz,
+                                                                                    PathSegment segment,
+                                                                                    UriInfo uriInfo,
+                                                                                    ServiceQueryParams serviceQueryParams) {
         ServiceQuery.ServiceQueryBuilder<K> builder = ServiceQuery.builder();
 
         builder.offset(getInt("offset", uriInfo));
@@ -117,8 +126,7 @@ public class RequestUtil {
             builder.ids(Lists.transform(Splitter.on(',').splitToList(segment.getPath()),
                     input -> TypeInfoUtil.getValue(input, EntityInfo.get(entityClazz).getIdFieldName(), idClazz, entityClazz)));
         }
-
-        return builder.build();
+        return builder;
     }
 
 }

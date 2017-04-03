@@ -121,7 +121,12 @@ public abstract class ServiceResource<V, K> {
 
 
     protected ServiceQuery<K> getQueryFromRequest(PathSegment segment, UriInfo uriInfo) throws RestDslException {
-        return RequestUtil.parseRequest(entityClazz, idClazz, segment, uriInfo, getServiceQueryParams());
+        return RequestUtil.parseCommonParameters(entityClazz, idClazz, segment, uriInfo, getServiceQueryParams())
+                .build();
+    }
+
+    protected ServiceQuery.ServiceQueryBuilder<K> getBuilderFromRequest(PathSegment segment, UriInfo uriInfo) throws RestDslException {
+        return RequestUtil.parseCommonParameters(entityClazz, idClazz, segment, uriInfo, getServiceQueryParams());
     }
 
     protected void validatePostEntity(V entity) throws RestDslException {
