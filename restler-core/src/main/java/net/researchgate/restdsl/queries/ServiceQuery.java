@@ -1,7 +1,7 @@
 package net.researchgate.restdsl.queries;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -32,7 +32,7 @@ public final class ServiceQuery<K> {
     private String order;
     private Set<String> fields;
     private Collection<K> ids;
-    private ImmutableMultimap<String, Object> criteria;
+    private Multimap<String, Object> criteria;
     private boolean indexValidation = true;
     private String groupBy;
     private Boolean countOnly = false;
@@ -72,7 +72,7 @@ public final class ServiceQuery<K> {
         return fields;
     }
 
-    public ImmutableMultimap<String, Object> getCriteria() {
+    public Multimap<String, Object> getCriteria() {
         return criteria;
     }
 
@@ -141,7 +141,6 @@ public final class ServiceQuery<K> {
         }
 
         private ServiceQuery<K> query = new ServiceQuery<>();
-        private Multimap<String, Object> criteria;
 
         public ServiceQueryBuilder<K> offset(Integer offset) throws RestDslException {
             if (offset != null) {
@@ -226,11 +225,11 @@ public final class ServiceQuery<K> {
                 throw new RestDslException("Criteria values for field '" + key + "' cannot be empty",
                         RestDslException.Type.QUERY_ERROR);
             }
-            if (criteria == null) {
-                criteria = LinkedHashMultimap.create();
+            if (query.criteria == null) {
+                query.criteria = HashMultimap.create();
             }
 
-            criteria.putAll(key, value);
+            query.criteria.putAll(key, value);
             return this;
         }
 
@@ -246,7 +245,6 @@ public final class ServiceQuery<K> {
 
         public ServiceQuery<K> build() {
             applyServiceQueryParams();
-            query.criteria = ImmutableMultimap.copyOf(this.criteria);
             query.calculateQueryShape();
             return query;
         }
@@ -255,9 +253,7 @@ public final class ServiceQuery<K> {
             // CRITERIA
             Multimap<String, Object> defaultCriteria = serviceQueryParams.getDefaultCriteria();
             if (defaultCriteria != null && !defaultCriteria.isEmpty()) {
-                Multimap<String, Object> combinedCriteria = criteria != null
-                        ? LinkedHashMultimap.create(criteria)
-                        : LinkedHashMultimap.create();
+                Multimap<String, Object> combinedCriteria = query.criteria != null ? LinkedHashMultimap.create(query.criteria) : LinkedHashMultimap.create();
                 // Merge defaultCriteria and user defined criteria
                 for (String key : defaultCriteria.keys()) {
                     if (!combinedCriteria.containsKey(key)) {
@@ -269,7 +265,7 @@ public final class ServiceQuery<K> {
                         .filter(key -> combinedCriteria.get(key).size() == 1 &&
                                 combinedCriteria.get(key).contains(ServiceQueryReservedValue.ANY)
                         ).forEach(combinedCriteria::removeAll);
-                criteria = combinedCriteria;
+                query.criteria = combinedCriteria;
             }
 
             // FIELDS
