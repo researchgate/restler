@@ -281,6 +281,7 @@ public class MongoServiceDao<V, K> implements PersistentServiceDao<V, K> {
         if (criteria.size() == 1) {
             // range query
             Object val = criteria.iterator().next();
+            // TODO: rather operatte on ParsedField and have a method to determine whether it's some operation
             if (field.contains(">") || field.contains("<")) {
                 mongoQuery.filter(field, val);
             } else if (val instanceof ServiceQueryReservedValue) {
@@ -289,7 +290,12 @@ public class MongoServiceDao<V, K> implements PersistentServiceDao<V, K> {
                 mongoQuery.field(field).equal(val);
             }
         } else {
-            mongoQuery.field(field).in(criteria);
+            // TODO: deal nicely with other operations
+            if (field.contains("<>")) {
+                mongoQuery.field(ServiceQueryUtil.parseQueryField(field).getFieldName()).notIn(criteria);
+            } else {
+                mongoQuery.field(field).in(criteria);
+            }
         }
     }
 
