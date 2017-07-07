@@ -65,7 +65,7 @@ public abstract class ServiceResource<V, K> {
 
     @Path("/{segment: .*}")
     @GET
-    @Produces("application/json")
+    @Produces("application/json;charset=UTF-8")
     public EntityResult<V> getEntityResult(@PathParam("segment") PathSegment segment, @Context UriInfo uriInfo) throws RestDslException {
         ServiceQuery<K> query = getQueryFromRequest(segment, uriInfo);
         return serviceModel.get(query);
@@ -73,7 +73,7 @@ public abstract class ServiceResource<V, K> {
 
     @Path("/{segment: .*}/info")
     @GET
-    @Produces("application/json")
+    @Produces("application/json;charset=UTF-8")
     public ServiceQueryInfo<K> getQueryInfo(@PathParam("segment") PathSegment segment, @Context UriInfo uriInfo) throws RestDslException {
         ServiceQuery<K> query = getQueryFromRequest(segment, uriInfo);
         return serviceModel.getServiceQueryInfo(query);
@@ -112,7 +112,7 @@ public abstract class ServiceResource<V, K> {
 
     @Path("/{segment: .*}")
     @DELETE
-    @Produces("application/json")
+    @Produces("application/json;charset=UTF-8")
     public Response delete(@PathParam("segment") PathSegment segment, @Context UriInfo uriInfo) throws RestDslException {
         ServiceQuery<K> query = getQueryFromRequest(segment, uriInfo);
         int deleted = serviceModel.delete(query);
