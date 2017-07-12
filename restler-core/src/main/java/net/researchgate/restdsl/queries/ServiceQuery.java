@@ -220,7 +220,7 @@ public final class ServiceQuery<K> {
             return withCriteria(key, Collections.singletonList(value));
         }
 
-        public ServiceQueryBuilder<K> withCriteria(String key, Collection<Object> value) throws RestDslException {
+        public ServiceQueryBuilder<K> withCriteria(String key, Collection<?> value) throws RestDslException {
             if (value == null || value.isEmpty()) {
                 throw new RestDslException("Criteria values for field '" + key + "' cannot be empty",
                         RestDslException.Type.QUERY_ERROR);
