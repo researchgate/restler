@@ -232,6 +232,10 @@ public class MongoServiceDao<V, K> implements PersistentServiceDao<V, K> {
             mongoQuery.offset(serviceQuery.getOffset());
             mongoQuery.limit(serviceQuery.getLimit());
 
+            if (Boolean.FALSE.equals(serviceQuery.getSlaveOk())) {
+                mongoQuery.queryPrimaryOnly();
+            }
+
             if (serviceQuery.getOrder() != null) {
                 mongoQuery.order(serviceQuery.getOrder());
             }

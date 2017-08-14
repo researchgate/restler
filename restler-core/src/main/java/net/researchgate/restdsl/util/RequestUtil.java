@@ -89,6 +89,7 @@ public class RequestUtil {
         builder.groupBy(getString("groupBy", uriInfo));
         builder.withServiceQueryParams(serviceQueryParams);
         builder.syncMatch(getToList("syncMatch", uriInfo));
+        builder.slaveOk(getBoolean("slaveOk", uriInfo));
 
         MultivaluedMap<String, String> matrixParams = segment.getMatrixParameters();
         if (!matrixParams.isEmpty()) {

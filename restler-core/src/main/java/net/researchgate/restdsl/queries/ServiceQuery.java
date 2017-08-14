@@ -36,6 +36,7 @@ public final class ServiceQuery<K> {
     private boolean indexValidation = true;
     private String groupBy;
     private Boolean countOnly = false;
+    private Boolean slaveOk;
 
     // field that ensures that all subelements of these fields must match in "sync"
     // it's like $elemMatch in Mongo https://docs.mongodb.com/v3.2/reference/operator/query/elemMatch/
@@ -66,6 +67,10 @@ public final class ServiceQuery<K> {
 
     public Boolean getCountOnly() {
         return countOnly;
+    }
+
+    public Boolean getSlaveOk() {
+        return slaveOk;
     }
 
     public Set<String> getFields() {
@@ -216,6 +221,11 @@ public final class ServiceQuery<K> {
             return this;
         }
 
+        public ServiceQueryBuilder<K> slaveOk(Boolean slaveOk) {
+            query.slaveOk = slaveOk;
+            return this;
+        }
+
         public ServiceQueryBuilder<K> withCriterion(String key, Object value) throws RestDslException {
             return withCriteria(key, Collections.singletonList(value));
         }
@@ -314,6 +324,10 @@ public final class ServiceQuery<K> {
 
         if (!indexValidation) {
             sb.append("indexValidation=false&");
+        }
+
+        if (slaveOk != null) {
+            sb.append("slaveOk=").append(slaveOk).append("&");
         }
 
         if (order != null) {
