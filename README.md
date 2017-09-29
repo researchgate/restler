@@ -22,9 +22,12 @@ For the sake of example, let's assume that you have an `Account` entity that you
 ```java
 // Morphia annotations for MongoDB collection name and indexes and 
 @Entity("accounts")
+@Indexes({
          @Index(fields = @Field("rating")),
          @Index(fields = {@Field("stats.scoreBreakdown"), @Field(value = "rating", type = IndexType.DESC)}),
          @Index(fields = @Field("nickname"))
+     }
+)
 public class Account {
 
 	// MongoDB primary key (_id)
