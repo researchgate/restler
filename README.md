@@ -205,7 +205,8 @@ Main classes:
 * ServiceQuery - representation of a query to a storage.
 * MongoServiceDao - DAO for MongoDB
 * ServiceModel - a basic model that implements typical CRUD operations
-* ServiceResource - a basic resource that exposes CRUD operations
+* BaseServiceResource - a basic resource that only exposes retrieve operation.
+* ServiceResource - a basic resource that exposes all CRUD operations.
 
 Just extend a corresponding class (dao, model or resource) with your types for primary key and entity. If you need just CRUD, it's likely that you won't have to do anything more. 
 

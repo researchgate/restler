@@ -20,7 +20,7 @@ subprojects {
     apply plugin: 'maven'
     apply plugin: 'com.jfrog.bintray'
 
-    group='net.researchgate'
+    group = 'net.researchgate'
 
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
@@ -94,6 +94,7 @@ project(":restler-core") {
 
         testCompile group: 'junit', name: 'junit', version: '4.11'
         testCompile group: 'org.mockito', name: 'mockito-all', version: '1.+'
+        testCompile group: 'org.glassfish.jersey.core', name: 'jersey-common', version: '2.23.1'
     }
 }
 

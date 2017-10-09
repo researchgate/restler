@@ -118,6 +118,39 @@ public class AccountResourceTest extends AbstractMongoDBTest {
         resources.client().target("/accounts/-;id <=" + savedAccount.getId()).request().get();
     }
 
+
+    @Test
+    public void testGetById_trailingSlash_accept() {
+        assertThat(resources.client().target("/accounts/-;")
+                .request().get()
+                .readEntity(EntityResult.class).getTotalItems()).isEqualTo(0);
+
+
+        Account account = new Account();
+        account.setNickname("John Doe");
+        Account persisted = resources.client().target("/accounts").request()
+                .post(Entity.entity(account, MediaType.APPLICATION_JSON_TYPE))
+                .readEntity(Account.class);
+        assertNotNull(persisted);
+        assertNotNull(persisted.getId());
+
+
+        // retrieve without trailing slash
+        assertEquals(1L, resources.client()
+                .target("/accounts").path(persisted.getId().toString())
+                .request().get()
+                .readEntity(EntityResult.class)
+                .getTotalItems().longValue());
+
+        // retrieve withtrailing slash
+        assertEquals(1L, resources.client()
+                .target("/accounts").path(persisted.getId().toString() + "/")
+                .request().get()
+                .readEntity(EntityResult.class)
+                .getTotalItems().longValue());
+    }
+
+
     @Test
     public void testCountOnly() {
         Response response = postAccount(mockedAccount());
