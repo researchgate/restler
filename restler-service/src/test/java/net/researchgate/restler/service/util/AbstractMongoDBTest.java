@@ -11,6 +11,7 @@
 
 package net.researchgate.restler.service.util;
 
+import com.squarespace.jersey2.guice.JerseyGuiceUtils;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodProcess;
 import de.flapdoodle.embed.mongo.MongodStarter;
@@ -46,6 +47,11 @@ public abstract class AbstractMongoDBTest {
                 .net(new Net(PORT, Network.localhostIsIPv6()))
                 .build());
         _mongod = _mongodExe.start();
+
+        // This is needed, for now at least. Remove this when not needed. Without, we currently get:
+        // java.lang.RuntimeException: java.lang.ClassNotFoundException: Provider org.glassfish.jersey.internal.RuntimeDelegateImpl could not be instantiated: java.lang.IllegalStateException: It appears there is no ServiceLocatorGenerator installed.
+        // See: https://github.com/dropwizard/dropwizard/issues/1772
+        JerseyGuiceUtils.install((s, serviceLocator) -> null);
     }
 
     @AfterClass
