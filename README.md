@@ -245,3 +245,9 @@ where `fieldName` is a field name from your entity.
 	* Limiting every group result to some amount of entries
 
 
+# How to release
+To build a release of restler:
+
+```bash
+$ gradle release
+```
