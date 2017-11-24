@@ -289,8 +289,9 @@ public final class ServiceQuery<K> {
         if (ids != null && !ids.isEmpty()) {
             sb.append(Joiner.on(",").join(ids));
         } else {
-            sb.append("-;");
+            sb.append("-");
         }
+        sb.append(';');
         if (criteria != null) {
             for (String c : criteria.keySet()) {
                 sb.append(c).append("=");
