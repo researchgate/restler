@@ -8,6 +8,13 @@ import java.util.function.Function;
  * Restler-specific precondtions
  */
 public class RestlerPreconditions {
+
+    public static void ensureArgument(boolean value, String message) throws RestDslException {
+        if (!value) {
+            throw new RestDslException("Precondition failed: " + message, RestDslException.Type.ENTITY_ERROR);
+        }
+    }
+
     public static void ensureNotNull(Object value, String fieldName) throws RestDslException {
         if (value == null) {
             throw new RestDslException("Field " + fieldName + "must not be null", RestDslException.Type.ENTITY_ERROR);
