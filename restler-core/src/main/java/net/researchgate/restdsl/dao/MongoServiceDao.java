@@ -23,6 +23,7 @@ import net.researchgate.restdsl.util.ServiceQueryUtil;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.Datastore;
+import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.dao.BasicDAO;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -37,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+@SuppressWarnings("WeakerAccess")
 public class MongoServiceDao<V, K> implements PersistentServiceDao<V, K> {
     private static final Logger LOGGER = LoggerFactory.getLogger(MongoServiceDao.class);
 
@@ -160,14 +162,27 @@ public class MongoServiceDao<V, K> implements PersistentServiceDao<V, K> {
     }
 
     protected V findAndModify(ServiceQuery<K> q, UpdateOperations<V> updateOperations) throws RestDslException {
-        return findAndModify(q, updateOperations, false, false);
+        FindAndModifyOptions options = new FindAndModifyOptions()
+                .returnNew(true)
+                .upsert(false);
+
+        return findAndModify(q, updateOperations, options);
     }
 
+    @Deprecated
     protected V findAndModify(ServiceQuery<K> q, UpdateOperations<V> updateOperations, boolean oldVersion, boolean createIfMissing) throws RestDslException {
+        FindAndModifyOptions options = new FindAndModifyOptions()
+                .returnNew(!oldVersion)
+                .upsert(createIfMissing);
+
+        return findAndModify(q, updateOperations, options);
+    }
+
+    protected V findAndModify(ServiceQuery<K> q, UpdateOperations<V> updateOperations, FindAndModifyOptions options) throws RestDslException {
         preUpdate(q, updateOperations);
         Query<V> morphiaQuery = convertToMorphiaQuery(q, false);
         try {
-            return morphiaDao.getDatastore().findAndModify(morphiaQuery, updateOperations, oldVersion, createIfMissing);
+            return morphiaDao.getDatastore().findAndModify(morphiaQuery, updateOperations, options);
         } catch (DuplicateKeyException e) {
             throw new RestDslException("Duplicate mongo key: " + e.getMessage(), RestDslException.Type.DUPLICATE_KEY);
         }
