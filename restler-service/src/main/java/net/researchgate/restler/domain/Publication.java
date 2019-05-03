@@ -3,6 +3,8 @@ package net.researchgate.restler.domain;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
+import java.util.Objects;
+
 /**
  * Publication entity
  */
@@ -41,7 +43,7 @@ public class Publication {
         if (publicationUid != null ? !publicationUid.equals(that.publicationUid) : that.publicationUid != null)
             return false;
         if (title != null ? !title.equals(that.title) : that.title != null) return false;
-        return lastModificationClientId == that.lastModificationClientId;
+        return Objects.equals(lastModificationClientId, that.lastModificationClientId);
 
     }
 

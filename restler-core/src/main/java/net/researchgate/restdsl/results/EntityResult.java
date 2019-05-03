@@ -29,7 +29,7 @@ public class EntityResult<T> implements EntityContainer<T> {
     private EntityContainer<T> currentContainer;
 
     public EntityResult(List<T> items, Long totalItems) {
-        this(new EntityList<T>(items, totalItems));
+        this(new EntityList<>(items, totalItems));
     }
 
     // for Jackson
