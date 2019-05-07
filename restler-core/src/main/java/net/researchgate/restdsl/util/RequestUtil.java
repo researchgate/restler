@@ -77,7 +77,7 @@ public class RequestUtil {
 
     }
 
-    public static <K, V> ServiceQuery<K> parseRequest(Class<V> entityClazz, Class<K> idClazz, PathSegment segment, UriInfo uriInfo, ServiceQueryParams serviceQueryParams) throws RestDslException {
+    public static <K, V> ServiceQuery<K> parseRequest(Class<V> entityClazz, Class<K> idClazz, PathSegment segment, UriInfo uriInfo, ServiceQueryParams defaultParams) throws RestDslException {
         ServiceQuery.ServiceQueryBuilder<K> builder = ServiceQuery.builder();
 
         builder.offset(getInt("offset", uriInfo));
@@ -87,7 +87,7 @@ public class RequestUtil {
         builder.indexValidation(getBoolean("indexValidation", uriInfo));
         builder.countTotalItems(getBoolean("countTotalItems", uriInfo));
         builder.groupBy(getString("groupBy", uriInfo));
-        builder.withServiceQueryParams(serviceQueryParams);
+        builder.withServiceQueryParams(defaultParams);
         builder.syncMatch(getToList("syncMatch", uriInfo));
 
         MultivaluedMap<String, String> matrixParams = segment.getMatrixParameters();
