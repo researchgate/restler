@@ -81,9 +81,4 @@ public class ServiceModel<V, K> {
         return serviceDao.getServiceQueryInfo(q);
     }
 
-    // helpers
-
-    // this is a guava Preconditions.checkNotNull inspired helper method
-
-
 }

@@ -264,9 +264,8 @@ public final class BeanUtils {
         if (property.contains(".")) {
             // We need to recurse down to the final object
             String props[] = property.split("\\.");
-            Object value = null;
             Method method = obj.getClass().getMethod(getGetterMethodName(props[0], false));
-            value = method.invoke(obj);
+            Object value = method.invoke(obj);
             if (value == null) {
                 return null;
             }
@@ -314,9 +313,8 @@ public final class BeanUtils {
 
         // We need to recurse down to the final object
         String props[] = property.split("\\.");
-        Object value = null;
         Method method = obj.getClass().getMethod(getGetterMethodName(props[0], false));
-        value = method.invoke(obj);
+        Object value = method.invoke(obj);
         if (value == null) {
             return null;
         }
@@ -360,9 +358,8 @@ public final class BeanUtils {
         if (property.contains(".")) {
             // We need to recurse down to the final object
             String props[] = property.split("\\.");
-            Object value = null;
             Method method = obj.getClass().getMethod(getGetterMethodName(props[0], false));
-            value = method.invoke(obj);
+            Object value = method.invoke(obj);
             if (value == null) {
                 return null;
             }
@@ -392,7 +389,7 @@ public final class BeanUtils {
 
         if (!property.contains(".")) {
 
-            java.lang.reflect.Field prop = null;
+            java.lang.reflect.Field prop;
             try {
                 prop = obj.getClass().getDeclaredField(property);
             } catch (NoSuchFieldException e) {
@@ -408,9 +405,8 @@ public final class BeanUtils {
 
         // We need to recurse down to the final object
         String props[] = property.split("\\.");
-        Object value = null;
         Method method = obj.getClass().getMethod(BeanUtils.getGetterMethodName(props[0], false));
-        value = method.invoke(obj);
+        Object value = method.invoke(obj);
         if (value == null) {
             return;
         }
@@ -423,8 +419,8 @@ public final class BeanUtils {
         // The property is a field within a list of objects, so apply the unset to each object within the list
         List multiValuedObj = ((List) value);
         int beginIndex = props[0].length() + 1;
-        for (int i = 0; i < multiValuedObj.size(); i++) {
-            unsetObjectFields(multiValuedObj.get(i), property.substring(beginIndex));
+        for (Object o : multiValuedObj) {
+            unsetObjectFields(o, property.substring(beginIndex));
         }
     }
 
@@ -511,7 +507,7 @@ public final class BeanUtils {
     public static <T> Set<String> getNonNullFields(T bean, Set<String> ignoreFields) throws IntrospectionException, IllegalArgumentException, IllegalAccessException,
             InvocationTargetException {
         BeanInfo beanInfo = Introspector.getBeanInfo(bean.getClass());
-        Set<String> nonNullFields = new HashSet<String>();
+        Set<String> nonNullFields = new HashSet<>();
         for (PropertyDescriptor descriptor : beanInfo.getPropertyDescriptors()) {
             String propertyName = descriptor.getName();
             Method readMethod = descriptor.getReadMethod();
@@ -554,7 +550,7 @@ public final class BeanUtils {
     public static <T> Map<String, Object> shallowDifferences(T oldBean, T newBean, Set<String> properties, boolean ignoreNewNulls, boolean ignoreEmptyCollections, boolean ignore) throws IntrospectionException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         LOGGER.debug("* calculating shallow differences between oldBean='{}' and newBean='{}'", oldBean, newBean);
 
-        Map<String, Object> changes = new HashMap<String, Object>();
+        Map<String, Object> changes = new HashMap<>();
         BeanInfo beanInfo = Introspector.getBeanInfo(oldBean.getClass());
 
         // Iterate over all the attributes

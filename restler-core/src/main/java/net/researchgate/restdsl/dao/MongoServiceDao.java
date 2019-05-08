@@ -23,6 +23,7 @@ import net.researchgate.restdsl.util.ServiceQueryUtil;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.Datastore;
+import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.dao.BasicDAO;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -37,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+@SuppressWarnings("WeakerAccess")
 public class MongoServiceDao<V, K> implements PersistentServiceDao<V, K> {
     private static final Logger LOGGER = LoggerFactory.getLogger(MongoServiceDao.class);
 
@@ -70,9 +72,7 @@ public class MongoServiceDao<V, K> implements PersistentServiceDao<V, K> {
     public EntityResult<V> get(ServiceQuery<K> serviceQuery) throws RestDslException {
         Query<V> morphiaQuery = convertToMorphiaQuery(serviceQuery);
 
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(morphiaQuery.toString());
-        }
+        LOGGER.debug("Executing query {}", morphiaQuery);
 
         String groupBy = serviceQuery.getGroupBy();
         try (StatsTimingWrapper ignored = getQueryShapeWrapper(serviceQuery)) {
@@ -99,7 +99,7 @@ public class MongoServiceDao<V, K> implements PersistentServiceDao<V, K> {
                     EntityList<V> entityList = new EntityList<>(resultPerKey, getTotalItemsCnt(q, serviceQuery, resultPerKey));
                     groupedResult.put(k, entityList);
                 }
-                return new EntityResult<>(new EntityMultimap<>(groupedResult, serviceQuery.isCountTotalItems() ? morphiaQuery.countAll() : null));
+                return new EntityResult<>(new EntityMultimap<>(groupedResult, serviceQuery.isCountTotalItems() ? morphiaQuery.count() : null));
             }
         }
     }
@@ -112,7 +112,7 @@ public class MongoServiceDao<V, K> implements PersistentServiceDao<V, K> {
 
     @Override
     public long count(ServiceQuery<K> serviceQuery) throws RestDslException {
-        return convertToMorphiaQuery(serviceQuery).countAll();
+        return convertToMorphiaQuery(serviceQuery).count();
     }
 
     @Override
@@ -162,14 +162,27 @@ public class MongoServiceDao<V, K> implements PersistentServiceDao<V, K> {
     }
 
     protected V findAndModify(ServiceQuery<K> q, UpdateOperations<V> updateOperations) throws RestDslException {
-        return findAndModify(q, updateOperations, false, false);
+        FindAndModifyOptions options = new FindAndModifyOptions()
+                .returnNew(true)
+                .upsert(false);
+
+        return findAndModify(q, updateOperations, options);
     }
 
+    @Deprecated
     protected V findAndModify(ServiceQuery<K> q, UpdateOperations<V> updateOperations, boolean oldVersion, boolean createIfMissing) throws RestDslException {
+        FindAndModifyOptions options = new FindAndModifyOptions()
+                .returnNew(!oldVersion)
+                .upsert(createIfMissing);
+
+        return findAndModify(q, updateOperations, options);
+    }
+
+    protected V findAndModify(ServiceQuery<K> q, UpdateOperations<V> updateOperations, FindAndModifyOptions options) throws RestDslException {
         preUpdate(q, updateOperations);
         Query<V> morphiaQuery = convertToMorphiaQuery(q, false);
         try {
-            return morphiaDao.getDatastore().findAndModify(morphiaQuery, updateOperations, oldVersion, createIfMissing);
+            return morphiaDao.getDatastore().findAndModify(morphiaQuery, updateOperations, options);
         } catch (DuplicateKeyException e) {
             throw new RestDslException("Duplicate mongo key: " + e.getMessage(), RestDslException.Type.DUPLICATE_KEY);
         }
@@ -216,15 +229,15 @@ public class MongoServiceDao<V, K> implements PersistentServiceDao<V, K> {
 
                 if (!all) {
                     if (!includedFields.isEmpty()) {
-                        mongoQuery.retrievedFields(true, includedFields.toArray(new String[includedFields.size()]));
+                        includedFields.forEach(f -> mongoQuery.project(f, true));
                     } else {
                         // only excluded fields were provided
-                        mongoQuery.retrievedFields(false, excludedFields.toArray(new String[excludedFields.size()]));
+                        excludedFields.forEach(f -> mongoQuery.project(f, false));
                     }
                 } else {
                     // provided * but also excluded fields
                     if (!excludedFields.isEmpty()) {
-                        mongoQuery.retrievedFields(false, excludedFields.toArray(new String[excludedFields.size()]));
+                        excludedFields.forEach(f -> mongoQuery.project(f, false));
                     }
                 }
             }
@@ -269,7 +282,7 @@ public class MongoServiceDao<V, K> implements PersistentServiceDao<V, K> {
                         enrichQuery(subFieldQuery, criteriaKey.substring(k.length() + 1), serviceQuery.getCriteria().get(criteriaKey));
                     }
 
-                    mongoQuery.field(k).hasThisElement(subFieldQuery.getQueryObject());
+                    mongoQuery.field(k).elemMatch(subFieldQuery);
                 }
             }
         }
@@ -311,7 +324,7 @@ public class MongoServiceDao<V, K> implements PersistentServiceDao<V, K> {
         }
 
         if (serviceQuery.getCountOnly()) {
-            return q.countAll();
+            return q.count();
         }
 
         // if getLimit == 0 then we need to count anyway
@@ -323,7 +336,7 @@ public class MongoServiceDao<V, K> implements PersistentServiceDao<V, K> {
         if (results.size() != 0 && results.size() < q.getLimit()) {
             return (long) (q.getOffset() + results.size());
         } else {
-            return q.countAll();
+            return q.count();
         }
     }
 
