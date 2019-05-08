@@ -11,8 +11,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.UnknownHostException;
-
 public class MongoClientBuilder {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MongoClientBuilder.class);
@@ -168,11 +166,7 @@ public class MongoClientBuilder {
         }
 
         MongoClientURI mongoClientURI = new MongoClientURI(uri, options);
-        try {
-            return new MongoClient(mongoClientURI);
-        } catch (UnknownHostException e) {
-            throw new RuntimeException("Cannot connect to mongo: " + uri, e);
-        }
+        return new MongoClient(mongoClientURI);
     }
 
     public MongoClient build(Environment environment) {
