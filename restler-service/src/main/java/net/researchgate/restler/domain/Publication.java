@@ -12,8 +12,8 @@ import java.util.Objects;
 public class Publication {
     @Id
     private Long publicationUid;
-
     private String title;
+    private String lastModificationClientId;
 
     public Long getPublicationUid() {
         return publicationUid;
@@ -27,32 +27,31 @@ public class Publication {
         return title;
     }
 
-    public String lastModificationClientId;
-
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public String getLastModificationClientId() {
+        return lastModificationClientId;
+    }
+
+    public void setLastModificationClientId(String lastModificationClientId) {
+        this.lastModificationClientId = lastModificationClientId;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-
         Publication that = (Publication) o;
-
-        if (publicationUid != null ? !publicationUid.equals(that.publicationUid) : that.publicationUid != null)
-            return false;
-        if (title != null ? !title.equals(that.title) : that.title != null) return false;
-        return Objects.equals(lastModificationClientId, that.lastModificationClientId);
-
+        return Objects.equals(publicationUid, that.publicationUid) &&
+                Objects.equals(title, that.title) &&
+                Objects.equals(lastModificationClientId, that.lastModificationClientId);
     }
 
     @Override
     public int hashCode() {
-        int result = publicationUid != null ? publicationUid.hashCode() : 0;
-        result = 31 * result + (title != null ? title.hashCode() : 0);
-        result = 31 * result + (lastModificationClientId != null ? lastModificationClientId.hashCode() : 0);
-        return result;
+        return Objects.hash(publicationUid, title, lastModificationClientId);
     }
 
     @Override
@@ -62,13 +61,5 @@ public class Publication {
                 ", title='" + title + '\'' +
                 ", lastModificationClientId=" + lastModificationClientId +
                 '}';
-    }
-
-    public String getLastModificationClientId() {
-        return lastModificationClientId;
-    }
-
-    public void setLastModificationClientId(String lastModificationClientId) {
-        this.lastModificationClientId = lastModificationClientId;
     }
 }
