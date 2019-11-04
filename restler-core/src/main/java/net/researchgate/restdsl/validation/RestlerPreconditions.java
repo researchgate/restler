@@ -10,13 +10,13 @@ import java.util.function.Function;
 public class RestlerPreconditions {
     public static void ensureNotNull(Object value, String fieldName) throws RestDslException {
         if (value == null) {
-            throw new RestDslException("Field " + fieldName + "must not be null", RestDslException.Type.ENTITY_ERROR);
+            throw new RestDslException("Field " + fieldName + " must not be null", RestDslException.Type.ENTITY_ERROR);
         }
     }
 
     public static void ensureNotSet(Object value, String fieldName) throws RestDslException {
         if (value != null) {
-            throw new RestDslException("Field " + fieldName + "must not be set, but got " + value, RestDslException.Type.ENTITY_ERROR);
+            throw new RestDslException("Field " + fieldName + " must not be set, but got " + value, RestDslException.Type.ENTITY_ERROR);
         }
     }
 
