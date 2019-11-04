@@ -11,6 +11,10 @@ plugins {
     id 'net.researchgate.release' version '2.3.5'
 }
 
+task wrapper(type: Wrapper) {
+    gradleVersion = '4.10.3'
+}
+
 repositories {
     mavenCentral()
 }
