@@ -42,7 +42,10 @@ import java.util.Set;
 public class MongoServiceDao<V, K> implements PersistentServiceDao<V, K> {
     private static final Logger LOGGER = LoggerFactory.getLogger(MongoServiceDao.class);
 
-    private static final String QUERY_KEY = "queries.shapes.%s.%%H";
+    private static final String METRICS_SEPARATOR = "__";
+    private static final Joiner METRICS_JOINER = Joiner.on(METRICS_SEPARATOR);
+
+    // TODO remove
     private final String collectionName;
 
     private BasicDAO<V, K> morphiaDao;
@@ -75,7 +78,7 @@ public class MongoServiceDao<V, K> implements PersistentServiceDao<V, K> {
         LOGGER.debug("Executing query {}", morphiaQuery);
 
         String groupBy = serviceQuery.getGroupBy();
-        try (StatsTimingWrapper ignored = getQueryShapeWrapper(serviceQuery)) {
+        try (StatsTimingWrapper ignored = getQueryShapeWrapper("get")) {
             if (groupBy == null) {
                 List<V> results = Collections.emptyList();
                 if (!serviceQuery.getCountOnly()) {
@@ -107,7 +110,10 @@ public class MongoServiceDao<V, K> implements PersistentServiceDao<V, K> {
 
     @Override
     public V getOne(ServiceQuery<K> serviceQuery) throws RestDslException {
-        return morphiaDao.findOne(convertToMorphiaQuery(serviceQuery));
+        // TODO verify
+        try (StatsTimingWrapper ignored = getQueryShapeWrapper("getOne")) {
+            return morphiaDao.findOne(convertToMorphiaQuery(serviceQuery));
+        }
     }
 
     @Override
@@ -427,8 +433,10 @@ public class MongoServiceDao<V, K> implements PersistentServiceDao<V, K> {
     }
 
     // PRIVATE
-    private StatsTimingWrapper getQueryShapeWrapper(ServiceQuery<K> serviceQuery) {
-        return StatsTimingWrapper.of(statsReporter, String.format(QUERY_KEY, collectionName + "." + serviceQuery.getQueryShape()));
+    private StatsTimingWrapper getQueryShapeWrapper(String methodName) {
+        String daoClassName = this.getClass().getSimpleName().split("\\$\\$")[0];
+        return StatsTimingWrapper.of(statsReporter,
+                METRICS_SEPARATOR + METRICS_JOINER.join("class;" + daoClassName,  "method;" + methodName) + METRICS_SEPARATOR);
     }
 
 }
