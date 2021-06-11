@@ -135,9 +135,9 @@ public class EntityResult<T> implements EntityContainer<T> {
      * One cannot say in java "read this JSON into EntityResult of T, where T is a Publication.
      * Type info is erased at runtime. Therefore Jersey has some helper classes to address such an issue.
      * <p>
-     * example usage: EntityResult<Publication> result = response.readEntity(EntityResult.getGenericType(Publication.class));
+     * example usage: EntityResult&lt;Publication&gt; result = response.readEntity(EntityResult.getGenericType(Publication.class));
      * <p>
-     * this won't work: EntityResult<Publication> result = response.readEntity(EntityResult.class);
+     * this won't work: EntityResult&lt;Publication&gt; result = response.readEntity(EntityResult.class);
      * LinkedHashMap will be put as T and at some point you will get:
      * java.lang.ClassCastException: java.util.LinkedHashMap cannot be cast to net.researchgate.restler.domain.Publication
      */
