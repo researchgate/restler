@@ -2,6 +2,7 @@ package net.researchgate.restdsl.resources;
 
 import net.researchgate.restdsl.domain.EntityInfo;
 import net.researchgate.restdsl.exceptions.RestDslException;
+import net.researchgate.restdsl.model.BaseServiceModel;
 import net.researchgate.restdsl.model.ServiceModel;
 import net.researchgate.restdsl.queries.ServiceQuery;
 import net.researchgate.restdsl.queries.ServiceQueryInfo;
@@ -33,12 +34,12 @@ public abstract class BaseServiceResource<V, K> {
     private final Class<K> idClazz;
 
     protected final EntityInfo<V> entityInfo;
-    protected final ServiceModel<V, K> serviceModel;
+    private final BaseServiceModel<V, K> serviceModel;
 
     /* Matches "/" followed by as little as possible to the end or the next non-encoded slash. */
     public static final String PATH_SEGMENT_PATTERN = "/{segment: [^/]*?}";
 
-    public BaseServiceResource(ServiceModel<V, K> serviceModel, Class<V> entityClazz, Class<K> idClazz) {
+    public BaseServiceResource(BaseServiceModel<V, K> serviceModel, Class<V> entityClazz, Class<K> idClazz) {
         this.serviceModel = serviceModel;
         this.entityClazz = entityClazz;
         this.idClazz = idClazz;
@@ -46,15 +47,16 @@ public abstract class BaseServiceResource<V, K> {
     }
 
     @SuppressWarnings("unchecked")
-    public BaseServiceResource(ServiceModel<V, K> serviceModel) throws RestDslException {
-        Class<? extends ServiceModel> serviceModelClazz = serviceModel.getClass();
-        if (serviceModelClazz == ServiceModel.class || serviceModelClazz.getSuperclass() != ServiceModel.class) {
-            throw new RestDslException("Unable to detect entity and key type from class " + serviceModelClazz.getName() +
+    public BaseServiceResource(BaseServiceModel<V, K> serviceModel) throws RestDslException {
+
+        if (serviceModel.getClass().getSuperclass() != ServiceModel.class && serviceModel.getClass().getSuperclass() != BaseServiceModel.class) {
+            throw new RestDslException("Unable to detect entity and key type from class " + serviceModel.getClass().getName() +
                     "; use constructor with explicit entity and key classes",
                     RestDslException.Type.GENERAL_ERROR);
         }
 
-        ParameterizedType t = (ParameterizedType) serviceModelClazz.getAnnotatedSuperclass().getType();
+        // TODO: perhaps its better to expose the EntityInfo in ServiceDao & serviceModel?
+        ParameterizedType t = (ParameterizedType) serviceModel.getClass().getAnnotatedSuperclass().getType();
         this.entityClazz = (Class<V>) t.getActualTypeArguments()[0];
         this.idClazz = (Class<K>) t.getActualTypeArguments()[1];
         entityInfo = EntityInfo.get(entityClazz);

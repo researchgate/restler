@@ -27,9 +27,11 @@ import static javax.ws.rs.core.Response.Status.OK;
  * If you don't want all of these, extend BaseServiceResource yourself and include what you want.
  */
 public abstract class ServiceResource<V, K> extends BaseServiceResource<V, K> {
+    private final ServiceModel<V, K> serviceModel;
 
     public ServiceResource(ServiceModel<V, K> serviceModel, Class<V> entityClazz, Class<K> idClazz) {
         super(serviceModel, entityClazz, idClazz);
+        this.serviceModel = serviceModel;
     }
 
     @POST
