@@ -5,41 +5,30 @@ import net.researchgate.restdsl.domain.EntityInfo;
 import net.researchgate.restdsl.exceptions.RestDslException;
 import net.researchgate.restdsl.queries.PatchContext;
 import net.researchgate.restdsl.queries.ServiceQuery;
-import net.researchgate.restdsl.queries.ServiceQueryInfo;
-import net.researchgate.restdsl.results.EntityResult;
 import net.researchgate.restdsl.util.BeanUtils;
 
 import java.util.Collections;
 import java.util.Map;
 
 /**
- * General model
- * <p>
- * V - entity type
- * K - entity primary key type
+ * This model exposes full CRUD.
+ * Use this if you want simply want to expose the mongo operations via REST.
+ * If you have more challenging businessLogic, consider using {@link BaseServiceModel} and implement
+ * write operations yourself.
+ *
+ * @param <V> Type of the entity
+ * @param <K> Type of the entity's id field
  */
-public class ServiceModel<V, K> {
-    private PersistentServiceDao<V, K> serviceDao;
+public abstract class ServiceModel<V, K> extends BaseServiceModel<V, K> {
+    private final PersistentServiceDao<V, K> serviceDao;
 
     public ServiceModel(PersistentServiceDao<V, K> serviceDao) {
+        super(serviceDao);
         this.serviceDao = serviceDao;
     }
 
     protected PersistentServiceDao<V, K> getServiceDao() {
         return serviceDao;
-    }
-
-
-    public EntityResult<V> get(K id) throws RestDslException {
-        return serviceDao.get(ServiceQuery.byId(id));
-    }
-
-    public V getOne(K id) throws RestDslException {
-        return serviceDao.getOne(ServiceQuery.byId(id));
-    }
-
-    public EntityResult<V> get(ServiceQuery<K> q) throws RestDslException {
-        return serviceDao.get(q);
     }
 
     public int delete(ServiceQuery<K> q) throws RestDslException {
@@ -75,10 +64,6 @@ public class ServiceModel<V, K> {
             throw new RestDslException("Unable to diff the provided entity with the db entity (class " +
                     entity.getClass().getName() + ")", e, RestDslException.Type.ENTITY_ERROR);
         }
-    }
-
-    public ServiceQueryInfo<K> getServiceQueryInfo(ServiceQuery<K> q) {
-        return serviceDao.getServiceQueryInfo(q);
     }
 
 }

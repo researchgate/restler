@@ -6,7 +6,7 @@ import net.researchgate.restdsl.queries.ServiceQuery;
 import java.util.Map;
 
 /**
- * DAO that also can instert, remove, patch entities
+ * DAO that also can insert, remove, patch entities
  */
 public interface PersistentServiceDao<V, K> extends ServiceDao<V, K>, EntityLifecycleListener<V, K> {
 

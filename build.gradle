@@ -97,6 +97,7 @@ project(":restler-core") {
 
         runtime group: 'org.slf4j', name: 'slf4j-jdk14', version: '1.7.7'
 
+        testImplementation 'com.github.fakemongo:fongo:2.1.0'
         testCompile group: 'junit', name: 'junit', version: '4.11'
         testCompile group: 'org.mockito', name: 'mockito-all', version: '1.+'
         testCompile group: 'org.glassfish.jersey.core', name: 'jersey-common', version: '2.23.1'

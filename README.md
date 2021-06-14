@@ -87,7 +87,7 @@ Typical `$query_params`:
 * `offset (Integer)` - how many records to skip
 * `order (String)` - order by a certain field
 * `fields (String)` - comma-separated list of fields to return 
-* `groupBy (String)` - group by a certain field
+* `groupBy (String)` - group by a certain field. Starting from version 3.1.0, groupBy can be forbidden by the dao, in order to prevent too much load on the database. 
 * `indexValidation (boolean)` - whether enable index validation in your DAO (`true` by default)
 
 Examples:
