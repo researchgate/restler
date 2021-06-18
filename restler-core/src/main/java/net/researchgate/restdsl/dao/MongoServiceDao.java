@@ -20,14 +20,14 @@ import java.util.Map;
 /**
  * This dao exposes full CRUD.
  * Use this if you want simply want to expose the mongo operations via REST.
- * If you have more challenging businessLogic, consider using a {@link BaseMongoServiceDao} and implement
+ * If you have more challenging businessLogic, consider using a {@link MongoBaseServiceDao} and implement
  * write operations yourself.
  *
  * @param <V> Type of the entity
  * @param <K> Type of the entity's id field
  */
 @SuppressWarnings("WeakerAccess")
-public class MongoServiceDao<V, K> extends BaseMongoServiceDao<V, K> implements PersistentServiceDao<V, K> {
+public class MongoServiceDao<V, K> extends MongoBaseServiceDao<V, K> implements PersistentServiceDao<V, K> {
     private static final Logger LOGGER = LoggerFactory.getLogger(MongoServiceDao.class);
 
     public MongoServiceDao(Datastore datastore, Class<V> entityClazz) {
@@ -121,7 +121,7 @@ public class MongoServiceDao<V, K> extends BaseMongoServiceDao<V, K> implements 
      * Use when you need to bypass restDsl, for example  internal operations
      *
      * @return morphia's dao
-     * @deprecated Use {@link BaseMongoServiceDao#morphiaDao} instead, as it not unsafe to use morphia. This method will be removed soon because its public!
+     * @deprecated Use {@link MongoBaseServiceDao#morphiaDao} instead, as it not unsafe to use morphia. This method will be removed soon because its public!
      */
     public BasicDAO<V, K> getMorphiaDaoUnsafe() {
         return morphiaDao;

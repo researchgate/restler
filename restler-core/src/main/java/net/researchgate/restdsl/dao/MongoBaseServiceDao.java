@@ -48,8 +48,8 @@ import java.util.Set;
  * @param <V> Type of the entity
  * @param <K> Type of the entity's id field
  */
-public class BaseMongoServiceDao<V, K> implements ServiceDao<V, K>{
-    private static final Logger LOGGER = LoggerFactory.getLogger(BaseMongoServiceDao.class);
+public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
+    private static final Logger LOGGER = LoggerFactory.getLogger(MongoBaseServiceDao.class);
 
     private static final String QUERY_KEY = "queries.shapes.%s.%%H";
     protected final String collectionName;
@@ -62,11 +62,11 @@ public class BaseMongoServiceDao<V, K> implements ServiceDao<V, K>{
     // group by operations may require a lot requests to the database. We should have to explicitly enable it
     protected boolean allowGroupBy = false;
 
-    public BaseMongoServiceDao(Datastore datastore, Class<V> entityClazz) {
+    public MongoBaseServiceDao(Datastore datastore, Class<V> entityClazz) {
         this(datastore, entityClazz, NoOpStatsReporter.INSTANCE);
     }
     //TODO: provide implementations for StatsReporter in example service
-    public BaseMongoServiceDao(Datastore datastore, Class<V> entityClazz, StatsReporter statsReporter) {
+    public MongoBaseServiceDao(Datastore datastore, Class<V> entityClazz, StatsReporter statsReporter) {
         this.morphiaDao = new BasicDAO<>(entityClazz, datastore);
         this.collectionName = morphiaDao.getCollection().getName();
         this.entityClazz = entityClazz;
