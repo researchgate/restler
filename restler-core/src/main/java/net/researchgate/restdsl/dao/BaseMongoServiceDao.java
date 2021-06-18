@@ -130,14 +130,8 @@ public class BaseMongoServiceDao<V, K> implements ServiceDao<V, K>{
         return convertToMorphiaQuery(serviceQuery).count();
     }
 
-    /**
-     * Delete the entity by id value
-     * @param id the ID of the document to delete
-     * @return the number of deleted items (0 or 1)
-     */
     public int delete(K id) {
         return morphiaDao.deleteById(id).getN();
-
     }
 
     protected UpdateOperations<V> createUpdateOperations() {

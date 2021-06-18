@@ -6,9 +6,14 @@ import net.researchgate.restdsl.queries.ServiceQuery;
 import java.util.Map;
 
 /**
- * DAO that also can insert, remove, patch entities
+ * DAO that also can insert, remove, patch entities.
+ * This should cover all the updateOperations.
+ * If you want to be more restrictive, consider using a smaller superInterface
+ *
+ *  @param <V>  value entity
+ *  @param <K> primary key of the value entity
  */
-public interface PersistentServiceDao<V, K> extends ServiceDao<V, K>, EntityLifecycleListener<V, K> {
+public interface PersistentServiceDao<V, K> extends BaseServiceDao<V, K>, EntityLifecycleListener<V, K> {
 
     /**
      * @param serviceQuery service query
