@@ -11,8 +11,6 @@ import net.researchgate.restdsl.results.EntityResult;
  * This model implements the smalles common subset of operations to the underlying mongo collection.
  * Use this model if you want to make sure that your data is only written to in a controlled way.
  *
- * @See ServiceModel if you want more supported operations
- *
  * If you want to simply expose CRUD via REST, use a {@link ServiceModel} instead.
  *
  * @param <V> Type of the entity
