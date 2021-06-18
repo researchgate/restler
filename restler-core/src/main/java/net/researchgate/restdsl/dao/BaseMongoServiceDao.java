@@ -36,8 +36,12 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * This Dao implements read only access to the underlying mongo collection.
+ * This Dao implements common access to the underlying mongo collection.
  * Use this dao if you want to make sure that your data is only written to in a controlled way.
+ *
+ * Supported operations
+ * - get by restle dsl
+ * - delete by id
  *
  * If you want to simply expose CRUD via REST, use a {@link MongoServiceDao}.
  *
@@ -124,6 +128,16 @@ public class BaseMongoServiceDao<V, K> implements ServiceDao<V, K>{
 
     public long count(ServiceQuery<K> serviceQuery) throws RestDslException {
         return convertToMorphiaQuery(serviceQuery).count();
+    }
+
+    /**
+     * Delete the entity by id value
+     * @param id the ID of the document to delete
+     * @return the number of deleted items (0 or 1)
+     */
+    public int delete(K id) {
+        return morphiaDao.deleteById(id).getN();
+
     }
 
     protected UpdateOperations<V> createUpdateOperations() {
