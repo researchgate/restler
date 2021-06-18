@@ -1,55 +1,35 @@
-buildscript {
-    repositories {
-        jcenter()
-    }
-    dependencies {
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
-    }
-}
-
 plugins {
-    id 'org.gradle.base'
     id 'net.researchgate.release' version '2.8.1'
 }
 
 wrapper {
-    gradleVersion = '5.6.4'
-}
-
-repositories {
-    mavenCentral()
+    gradleVersion = '6.2.2'
 }
 
 subprojects {
     apply plugin: 'java'
-    apply plugin: 'maven'
-    apply plugin: 'com.jfrog.bintray'
+    apply plugin: 'maven-publish'
 
     group = 'net.researchgate'
 
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
 
-    bintray {
-        dryRun = false // Whether to run this as dry-run, without deploying
-        publish = true //If version should be auto published after an upload
+    publishing {
+        publications {
+            mavenJava(MavenPublication) {
+                from components.java
+            }
+        }
 
-        user = project.hasProperty('bintrayUser') ? bintrayUser : ''
-        key = project.hasProperty('bintrayApiKey') ? bintrayApiKey : ''
-        configurations = ['archives']
-        pkg {
-            name = 'restler'
-            repo = 'maven'
-            userOrg = 'researchgate'
-            licenses = ['MIT']
-            vcsUrl = 'https://github.com/researchgate/restler.git'
-            issueTrackerUrl = 'https://github.com/researchgate/restler/issues'
-            githubRepo = 'researchgate/restler'
-
-            version {
-                name = rootProject.version
-                vcsTag = rootProject.version
-                released = new Date()
+        repositories {
+            maven {
+                name = "GitHubPackages"
+                url = "https://maven.pkg.github.com/researchgate/restler"
+                credentials {
+                    username = System.getenv("GITHUB_ACTOR")
+                    password = System.getenv("GITHUB_TOKEN")
+                }
             }
         }
     }
@@ -58,13 +38,9 @@ subprojects {
         mavenCentral()
     }
 
-    task sourcesJar(type: Jar, dependsOn: classes) {
-        classifier = 'sources'
-        from sourceSets.main.allSource
-    }
-
-    artifacts {
-        archives sourcesJar
+    java {
+        withJavadocJar()
+        withSourcesJar()
     }
 
     test {
@@ -97,7 +73,7 @@ project(":restler-core") {
 
         runtime group: 'org.slf4j', name: 'slf4j-jdk14', version: '1.7.7'
 
-        testImplementation 'com.github.fakemongo:fongo:2.1.0'
+        testCompile 'com.github.fakemongo:fongo:2.1.0'
         testCompile group: 'junit', name: 'junit', version: '4.11'
         testCompile group: 'org.mockito', name: 'mockito-all', version: '1.+'
         testCompile group: 'org.glassfish.jersey.core', name: 'jersey-common', version: '2.23.1'
@@ -142,4 +118,4 @@ release {
 }
 
 beforeReleaseBuild.dependsOn subprojects.build
-afterReleaseBuild.dependsOn subprojects.bintrayUpload
+afterReleaseBuild.dependsOn subprojects.publish
