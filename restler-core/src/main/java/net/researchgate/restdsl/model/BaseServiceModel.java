@@ -1,5 +1,6 @@
 package net.researchgate.restdsl.model;
 
+import net.researchgate.restdsl.dao.BaseServiceDao;
 import net.researchgate.restdsl.dao.ServiceDao;
 import net.researchgate.restdsl.exceptions.RestDslException;
 import net.researchgate.restdsl.queries.ServiceQuery;
@@ -7,8 +8,10 @@ import net.researchgate.restdsl.queries.ServiceQueryInfo;
 import net.researchgate.restdsl.results.EntityResult;
 
 /**
- * This model implements read only access to the underlying mongo collection.
+ * This model implements the smalles common subset of operations to the underlying mongo collection.
  * Use this model if you want to make sure that your data is only written to in a controlled way.
+ *
+ * @See ServiceModel if you want more supported operations
  *
  * If you want to simply expose CRUD via REST, use a {@link ServiceModel} instead.
  *
@@ -16,9 +19,9 @@ import net.researchgate.restdsl.results.EntityResult;
  * @param <K> Type of the entity's id field
  */
 public abstract class BaseServiceModel<V, K> {
-    protected ServiceDao<V, K> serviceDao;
+    protected BaseServiceDao<V, K> serviceDao;
 
-    public BaseServiceModel(ServiceDao<V, K> serviceDao) {
+    public BaseServiceModel(BaseServiceDao<V, K> serviceDao) {
         this.serviceDao = serviceDao;
     }
 
@@ -40,5 +43,15 @@ public abstract class BaseServiceModel<V, K> {
 
     public ServiceQueryInfo<K> getServiceQueryInfo(ServiceQuery<K> q) {
         return serviceDao.getServiceQueryInfo(q);
+    }
+
+    /**
+     * Delete the entity by its id
+     *
+     * @param id the ID of the entity to delete
+     * @return the number of deleted items (0 or 1)
+     */
+    public int delete(K id) {
+        return serviceDao.delete(id);
     }
 }

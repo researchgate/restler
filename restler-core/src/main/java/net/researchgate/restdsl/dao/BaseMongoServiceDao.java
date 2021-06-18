@@ -40,7 +40,7 @@ import java.util.Set;
  * Use this dao if you want to make sure that your data is only written to in a controlled way.
  *
  * Supported operations
- * - get by restle dsl
+ * - get by restler dsl
  * - delete by id
  *
  * If you want to simply expose CRUD via REST, use a {@link MongoServiceDao}.
