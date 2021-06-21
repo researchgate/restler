@@ -6,9 +6,9 @@ import net.researchgate.restdsl.queries.ServiceQueryInfo;
 import net.researchgate.restdsl.results.EntityResult;
 
 /**
- * Abstract representation of DAO. Can be Solr dao, or PG dao in theory
- * V - value entity
- * K - primary key of the value entity
+ * Abstract representation of a reading DAO. Can be Solr dao, or PG dao in theory
+ * @param <V> - value entity
+ * @param <K> - primary key of the value entity
  */
 public interface ServiceDao<V, K> {
 

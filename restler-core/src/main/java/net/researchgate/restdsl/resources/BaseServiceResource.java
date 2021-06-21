@@ -23,7 +23,7 @@ import java.lang.reflect.ParameterizedType;
  * Commons methods for CRUD. This base class includes only the HTTP GET verb. If you want the others too,
  * 1. Extend this class
  * 2. Override the corresponding method e.g. createEntity().
- * 3. Just call super.createEntity() in it, or custom logic.
+ * 3. Call super.createEntity() in it, or custom logic.
  * 4. Annotate the overridden method with e.g. @POST or @PATH(...) where applicable.
  * <p>
  * V - entity type
@@ -76,6 +76,26 @@ public abstract class BaseServiceResource<V, K> {
         ServiceQuery<K> query = getQueryFromRequest(segment, uriInfo);
         return serviceModel.getServiceQueryInfo(query);
     }
+
+// This method is intentionally commented out, in order to not to expose deletes to clients by default.
+// The following stub is a starting point to copyPaste into your subclass
+//
+//    /**
+//     * Delete the entity by its id.
+//     *
+//     * @return 200, if the entity was deleted, 404 otherwise
+//     */
+//    @Path("/{id}")
+//    @DELETE
+//    @Produces("application/json;charset=UTF-8")
+//    public Response delete(@PathParam("id") String idString) throws RestDslException {
+//        final K id = TypeInfoUtil.getValue(idString, null, idClazz, null);
+//        int deleted = serviceModel.delete(id);
+//        if (deleted == 0) {
+//            throw new NotFoundException();
+//        }
+//        return Response.ok().build();
+//    }
 
     protected K getId(String id) throws RestDslException {
         return TypeInfoUtil.getValue(id, EntityInfo.get(entityClazz).getIdFieldName(), idClazz, entityClazz);
