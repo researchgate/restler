@@ -21,16 +21,20 @@ import net.researchgate.restdsl.types.TypeInfoUtil;
 import net.researchgate.restdsl.util.ServiceQueryUtil;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.mongodb.morphia.Datastore;
-import org.mongodb.morphia.dao.BasicDAO;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
+import dev.morphia.Datastore;
+import dev.morphia.dao.BasicDAO;
+import dev.morphia.query.Query;
+import dev.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -73,6 +77,7 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
         this.entityInfo = EntityInfo.get(entityClazz);
         this.entityIndexInfo = new EntityIndexInfo<>(entityClazz, morphiaDao.getCollection().getIndexInfo());
         this.statsReporter = statsReporter;
+        validateMorphiaAnnotations(entityClazz, new HashSet<>());
     }
 
     /**
@@ -352,5 +357,45 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
     // PRIVATE
     private StatsTimingWrapper getQueryShapeWrapper(ServiceQuery<K> serviceQuery) {
         return StatsTimingWrapper.of(statsReporter, String.format(QUERY_KEY, collectionName + "." + serviceQuery.getQueryShape()));
+    }
+
+
+    // TODO Remove this after the morphia migration.
+    // This method checks, that there are no old 'org.mongodb.morphia' annotations present on the morphia managed entities.
+    private void validateMorphiaAnnotations(Class<?> klass, Set<Class> seen) {
+        if (!seen.add(klass)) { // break circular deps
+            return;
+        }
+
+        for (Annotation cAnno : klass.getDeclaredAnnotations()) {
+            if (isBadAnnotation(cAnno)) {
+                throw new IllegalStateException("Incompatible morphia annotation found at " + klass.getName()
+                        + "\n annotation: " + cAnno.annotationType()
+                        + "\n Make sure all you domain objects are using only 'dev.morphia' annotations");
+            }
+
+        }
+        for (Field field : klass.getDeclaredFields()) {
+            if (Modifier.isStatic(field.getModifiers())) {
+                continue;
+            }
+            for (Annotation anno : field.getDeclaredAnnotations()) {
+                if (isBadAnnotation(anno)) {
+                    throw new IllegalStateException("Incompatible morphia annotation found at " + field
+                            + "\n annotation: " + anno.annotationType()
+                            + "\n Make sure all you domain objects are using only 'dev.morphia' annotations");
+                }
+            }
+            validateMorphiaAnnotations(field.getType(), seen);
+        }
+
+    }
+
+    private boolean isBadAnnotation(Annotation cAnno) {
+        Class<? extends Annotation> type = cAnno.annotationType();
+        if (type == null) {
+            return false;
+        }
+        return type.getTypeName().startsWith("org.mongodb.morphia");
     }
 }

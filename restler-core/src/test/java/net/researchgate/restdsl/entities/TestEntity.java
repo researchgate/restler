@@ -1,7 +1,7 @@
 package net.researchgate.restdsl.entities;
 
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.annotations.Id;
+import dev.morphia.annotations.Id;
 
 import java.util.Date;
 import java.util.List;

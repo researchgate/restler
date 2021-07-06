@@ -5,8 +5,8 @@ import com.google.common.base.Splitter;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import net.researchgate.restdsl.types.TypeInfoUtil;
-import org.mongodb.morphia.mapping.MappedClass;
-import org.mongodb.morphia.mapping.MappedField;
+import dev.morphia.mapping.MappedClass;
+import dev.morphia.mapping.MappedField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

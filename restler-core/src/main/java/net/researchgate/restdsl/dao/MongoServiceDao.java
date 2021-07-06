@@ -6,12 +6,12 @@ import net.researchgate.restdsl.metrics.NoOpStatsReporter;
 import net.researchgate.restdsl.metrics.StatsReporter;
 import net.researchgate.restdsl.queries.ServiceQuery;
 import org.apache.commons.collections.CollectionUtils;
-import org.mongodb.morphia.Datastore;
-import org.mongodb.morphia.FindAndModifyOptions;
-import org.mongodb.morphia.dao.BasicDAO;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
-import org.mongodb.morphia.query.UpdateResults;
+import dev.morphia.Datastore;
+import dev.morphia.FindAndModifyOptions;
+import dev.morphia.dao.BasicDAO;
+import dev.morphia.query.Query;
+import dev.morphia.query.UpdateOperations;
+import dev.morphia.query.UpdateResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

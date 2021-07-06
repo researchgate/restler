@@ -19,11 +19,8 @@ import de.flapdoodle.embed.mongo.config.MongodConfigBuilder;
 import de.flapdoodle.embed.mongo.config.Net;
 import de.flapdoodle.embed.mongo.distribution.Version;
 import de.flapdoodle.embed.process.runtime.Network;
-import net.researchgate.restler.domain.Account;
-import net.researchgate.restler.domain.Publication;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.mongodb.morphia.Morphia;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
