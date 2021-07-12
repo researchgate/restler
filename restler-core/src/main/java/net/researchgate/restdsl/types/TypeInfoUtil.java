@@ -7,10 +7,10 @@ import net.researchgate.restdsl.exceptions.RestDslException;
 import net.researchgate.restdsl.queries.ServiceQueryReservedValue;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.Morphia;
-import org.mongodb.morphia.mapping.MappedClass;
-import org.mongodb.morphia.mapping.MappedField;
-import org.mongodb.morphia.mapping.Mapper;
+import dev.morphia.Morphia;
+import dev.morphia.mapping.MappedClass;
+import dev.morphia.mapping.MappedField;
+import dev.morphia.mapping.Mapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

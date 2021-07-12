@@ -1,17 +1,25 @@
 package net.researchgate.restdsl.dao;
 
-import com.github.fakemongo.Fongo;
 import com.google.common.collect.Lists;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBCollection;
+import com.mongodb.MongoClient;
+import com.mongodb.ServerAddress;
+import de.bwaldvogel.mongo.MongoServer;
+import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
 import net.researchgate.restdsl.TestEntity;
 import net.researchgate.restdsl.exceptions.RestDslException;
 import net.researchgate.restdsl.metrics.NoOpStatsReporter;
 import net.researchgate.restdsl.metrics.StatsReporter;
 import net.researchgate.restdsl.queries.ServiceQuery;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.mongodb.morphia.Datastore;
-import org.mongodb.morphia.Morphia;
+import dev.morphia.Datastore;
+import dev.morphia.Morphia;
+
+import java.net.InetSocketAddress;
 
 import static net.researchgate.restdsl.exceptions.RestDslException.Type.QUERY_ERROR;
 import static org.junit.Assert.fail;
@@ -20,11 +28,27 @@ public class ServiceDaoTest {
 
     // This merely allow us to spin up a a dao.
     private Datastore fakedDatastore;
+    private MongoServer server;
+    private MongoClient client;
 
     @Before
     public void setUp() {
-        Fongo fongo = new Fongo("fake mongo");
-        fakedDatastore = new Morphia().createDatastore(fongo.getMongo(), "testDatabase");
+        server = new MongoServer(new MemoryBackend());
+        // bind on a random local port
+        InetSocketAddress serverAddress = server.bind();
+        client = new MongoClient(new ServerAddress(serverAddress));
+        fakedDatastore = new Morphia().createDatastore(client, "testDatabase");
+
+        // insert and remove an item in order to create indexes
+        final DBCollection collection = fakedDatastore.getCollection(TestEntity.class);
+        final Object id = collection.insert(new BasicDBObject()).getUpsertedId();
+        collection.remove(new BasicDBObject("_id", id));
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        client.close();
+        server.shutdown();
     }
 
     @Test

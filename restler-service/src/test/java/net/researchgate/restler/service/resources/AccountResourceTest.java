@@ -29,8 +29,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
-import org.mongodb.morphia.Datastore;
-import org.mongodb.morphia.Morphia;
+import dev.morphia.Datastore;
+import dev.morphia.Morphia;
 
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.client.Entity;

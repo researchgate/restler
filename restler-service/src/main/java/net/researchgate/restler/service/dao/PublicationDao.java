@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import net.researchgate.restdsl.dao.MongoServiceDao;
 import net.researchgate.restler.domain.Publication;
-import org.mongodb.morphia.Datastore;
+import dev.morphia.Datastore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -2,8 +2,8 @@ package net.researchgate.restdsl.domain;
 
 import net.researchgate.restdsl.exceptions.RestDslException;
 import net.researchgate.restdsl.types.TypeInfoUtil;
-import org.mongodb.morphia.mapping.MappedClass;
-import org.mongodb.morphia.mapping.MappedField;
+import dev.morphia.mapping.MappedClass;
+import dev.morphia.mapping.MappedField;
 
 import java.util.HashMap;
 import java.util.Map;

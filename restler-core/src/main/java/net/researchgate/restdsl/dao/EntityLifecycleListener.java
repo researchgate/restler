@@ -1,7 +1,7 @@
 package net.researchgate.restdsl.dao;
 
 import net.researchgate.restdsl.queries.ServiceQuery;
-import org.mongodb.morphia.query.UpdateOperations;
+import dev.morphia.query.UpdateOperations;
 
 
 interface EntityLifecycleListener<V, K> {
