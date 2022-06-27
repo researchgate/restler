@@ -29,7 +29,7 @@ public final class BeanUtils {
     private BeanUtils() {
     }
 
-    /**
+    /*
      * Copies the values of the merge Properties from the right hand side bean to the left side if the left bean's value
      * is null. Properties that don't have a getter or a setter will be ignored.
      *
@@ -43,7 +43,7 @@ public final class BeanUtils {
     }
 
 
-    /**
+    /*
      * Copies the values of the merge Properties from the right hand side bean to the left side if the copyPredicate returns
      * true. Properties that don't have a getter or a setter will be ignored.
      * The triple of the predicate has: The name of the property, the old value and the new value
@@ -247,7 +247,7 @@ public final class BeanUtils {
         }
     }
 
-    /**
+    /*
      * Retrieves an objects value by dot notation.
      *
      * @param obj      (The object to search within for the given property)
@@ -288,7 +288,7 @@ public final class BeanUtils {
         return null;
     }
 
-    /**
+    /*
      * Set an objects value by dot notation.
      *
      * @param obj
@@ -336,7 +336,7 @@ public final class BeanUtils {
         return setObjectValue(multiValuedObj.get(listIndex), property.substring(beginIndex), newValue);
     }
 
-    /**
+    /*
      * Set an objects value by dot notation.
      *
      * @param obj
@@ -371,7 +371,7 @@ public final class BeanUtils {
         }
     }
 
-    /**
+    /*
      * Unsets the field in an object using dot notation.  If the property description is for a field within a list, it will traverse into
      * the list and unset the appropriate fields
      * @param obj
@@ -492,7 +492,7 @@ public final class BeanUtils {
         return returnValue;
     }
 
-    /**
+    /*
      * Returns a set of non-null fields from a bean. If a property is in the ignoreFields set or does not have a getter
      * it will be ignored.
      *
@@ -532,7 +532,7 @@ public final class BeanUtils {
         return shallowDifferences(oldBean, newBean, ignoreProperties, ignoreNewNulls, ignoreEmptyCollections, true);
     }
 
-    /**
+    /*
      * Computes the shallow difference of read/write properties between oldBean (left hand side) and newBean (right hand side).
      * It will compare all properties that are in/not in properties (depends on the value of ignore. If they differ, the value of the newBean (right hand side)
      * will be reported in the result.
@@ -602,7 +602,7 @@ public final class BeanUtils {
         return changes;
     }
 
-    /**
+    /*
      * Patches bean (left hand side) with all not-null values from patches (right hand side).
      * Takes into account only read-write properties that are not in ignoreProperties.
      * Only touches the bean (left hand side) if the properties are not equal.
@@ -674,7 +674,7 @@ public final class BeanUtils {
         }
     }
 
-    /**
+    /*
      * Performs a deep copy of one object to the target which should be a new instance.  The 'target' and 'from' objects do not need to be of
      * the same type. i.e. 'target' could be a Publication, and 'from' a StructuredCitation.  Classes within each of the classes that are not directly
      * assignable should have a no-argument constructor available.
