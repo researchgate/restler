@@ -63,7 +63,7 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
     protected final EntityIndexInfo<V> entityIndexInfo;
     protected final StatsReporter statsReporter;
 
-    // group by operations may require a lot requests to the database. We should have to explicitly enable it
+    // group by operations may require a lot of requests to the database. We should have to explicitly enable it
     protected boolean allowGroupBy = false;
 
     public MongoBaseServiceDao(Datastore datastore, Class<V> entityClazz) {
@@ -92,19 +92,18 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
     public EntityResult<V> get(ServiceQuery<K> serviceQuery) throws RestDslException {
         Query<V> morphiaQuery = convertToMorphiaQuery(serviceQuery);
 
-        LOGGER.debug("Executing query {}", morphiaQuery);
-
         try (StatsTimingWrapper ignored = getQueryShapeWrapper(serviceQuery)) {
             String groupBy = serviceQuery.getGroupBy();
             if (groupBy == null) {
                 List<V> results = Collections.emptyList();
                 if (!serviceQuery.getCountOnly()) {
+                    LOGGER.debug("Executing query {}", morphiaQuery);
                     results = morphiaDao.find(morphiaQuery).asList();
                 }
                 return new EntityResult<>(results, getTotalItemsCnt(morphiaQuery, serviceQuery, results));
             } else {
                 if (!allowGroupBy) {
-                    throw new RestDslException("GroupBy is not allowed by this dao, but rquest contains groupBy '" + groupBy + "'. GroupBy can be enabled in the Service", RestDslException.Type.QUERY_ERROR);
+                    throw new RestDslException("GroupBy is not allowed by this dao, but request contains groupBy '" + groupBy + "'. GroupBy can be enabled in the Service", RestDslException.Type.QUERY_ERROR);
                 }
                 // warning: in-place criteria editing
                 Collection<Object> criteriaForGrouping = Lists.newArrayList(serviceQuery.getCriteria().get(groupBy));
@@ -116,6 +115,7 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
                     Query<V> q = convertToMorphiaQuery(serviceQuery);
                     List<V> resultPerKey = Collections.emptyList();
                     if (!serviceQuery.getCountOnly()) {
+                        LOGGER.debug("Executing query {}", q);
                         resultPerKey = morphiaDao.find(q).asList();
                     }
 
