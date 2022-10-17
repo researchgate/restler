@@ -41,7 +41,7 @@ public class MongoModule extends AbstractModule {
     @Provides
     @Singleton
     Datastore provideDataStore() {
-        LOGGER.info("Creating new morphia datastore: {}, {}", databaseName, mongoClient.getAddress());
+        LOGGER.info("Creating new morphia datastore: {}", databaseName);
         return morphia.createDatastore(mongoClient, databaseName);
     }
 }
