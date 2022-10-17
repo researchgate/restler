@@ -1,5 +1,8 @@
 # Changelog
 
+### 5.0.0
+* Backwards incompatible change: Upgraded mongoDB client to 4.1.1
+
 ### 4.0.0
 * Backwards incompatible change: Upgraded morphia 1.3.2 to 1.5.8. This changes the morphia namespace from 'org.mongodb.morphia' to 'dev.morphia'
 
