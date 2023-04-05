@@ -73,6 +73,9 @@ project(":restler-core") {
         compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
         compile group: 'commons-collections', name: 'commons-collections', version: '3.2.1'
 
+        compile 'io.swagger.core.v3:swagger-annotations:2.0.1'
+
+
         runtime group: 'org.slf4j', name: 'slf4j-jdk14', version: '1.7.7'
 
         testCompile 'de.bwaldvogel:mongo-java-server:1.38.0'
