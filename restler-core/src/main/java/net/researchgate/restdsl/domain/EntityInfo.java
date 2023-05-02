@@ -13,9 +13,9 @@ import java.util.Map;
  */
 
 public class EntityInfo<V> {
-    private String idFieldName;
-    private Class<?> idFieldClazz;
-    private MappedField mappedIdField;
+    private final String idFieldName;
+    private final Class<?> idFieldClazz;
+    private final MappedField mappedIdField;
     private static final Map<Class<?>, EntityInfo<?>> CACHE = new HashMap<>();
 
     @SuppressWarnings("unchecked")
