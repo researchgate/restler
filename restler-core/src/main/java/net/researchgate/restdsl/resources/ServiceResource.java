@@ -1,6 +1,10 @@
 package net.researchgate.restdsl.resources;
 
 import com.mongodb.BasicDBObject;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import net.researchgate.restdsl.annotations.PATCH;
 import net.researchgate.restdsl.exceptions.RestDslException;
 import net.researchgate.restdsl.model.ServiceModel;
@@ -35,6 +39,10 @@ public abstract class ServiceResource<V, K> extends BaseServiceResource<V, K> {
     }
 
     @POST
+    @Operation(summary = "Create a new  entity according to the business-logic")
+    @ApiResponse(description = "Success case. Returns the created entity in the response body", responseCode = "201")
+    @ApiResponse(description = "Client failure. Returns an error message response body", responseCode = "4xx")
+    @ApiResponse(description = "Server failure. Returns an error message response body", responseCode = "5xx")
     public Response createEntity(V entity, @Context UriInfo uriInfo) throws RestDslException {
         validatePostEntity(entity);
         V persisted = serviceModel.save(entity);
@@ -61,10 +69,16 @@ public abstract class ServiceResource<V, K> extends BaseServiceResource<V, K> {
         return Response.status(OK).entity(persisted).build();
     }
 
+    /*
+    Deletes entities via a rest-dsl query.
+    This is rather dangerous, clients may delete more than the intended entities.
+    Consider extending BaseServiceResource instead, that contains a copy-paste-able example for deletion  by id.
+     */
+    @Operation(summary = "Use with caution! Deletes all entities, that matches the provided query. ", deprecated = true)
     @Path(PATH_SEGMENT_PATTERN)
     @DELETE
     @Produces("application/json;charset=UTF-8")
-    public Response delete(@PathParam("segment") PathSegment segment, @Context UriInfo uriInfo) throws RestDslException {
+    public Response delete(@PathParam("segment") @Parameter(description = "A restDsl query. Ideally provide a single, explicit id. Otherwise ensure, that the query matches only the intended entities") PathSegment segment, @Context UriInfo uriInfo) throws RestDslException {
         ServiceQuery<K> query = getQueryFromRequest(segment, uriInfo);
         int deleted = serviceModel.delete(query);
         return Response.ok().entity(new BasicDBObject("deleted", deleted).toString()).build();

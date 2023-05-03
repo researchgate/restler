@@ -2,7 +2,6 @@ package net.researchgate.restdsl.resources;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Schema;
 import net.researchgate.restdsl.domain.EntityInfo;
@@ -69,16 +68,14 @@ public abstract class BaseServiceResource<V, K> {
     }
 
     @Operation(summary = "Retrieve entities using the generic researchgate 'restler' query-language: https://github.com/researchgate/restler#get")
-    @Parameters({
-            @Parameter(name = "segment", in = ParameterIn.PATH, schema = @Schema(type = "string", example = "-"), description = "A rest-dsl query, See https://github.com/researchgate/restler#get"),
-            @Parameter(name = "fields", in = ParameterIn.QUERY, description = "Only return this list of comma-separated fields. Use '*' to return all", example = "*"),
-            @Parameter(name = "limit", in = ParameterIn.QUERY, schema = @Schema(type = "integer", format = "int32"), description = "Limit the number of returned records"),
-            @Parameter(name = "offset", in = ParameterIn.QUERY, schema = @Schema(type = "integer", format = "int32"), description = "Skip this many records. Use this together with limit to implement pagination."),
-            @Parameter(name = "order", in = ParameterIn.QUERY, schema = @Schema(type = "string"), description = "Sort the result by this field in ascending order. The field can be prefixed with '-' to sort in descending order"),
-            @Parameter(name = "countTotalItems", in = ParameterIn.QUERY, schema = @Schema(type = "boolean"), description = "whether to count the total items. Setting this to 'false' will remove the 'list.totalItems' property and may improve response times (true by default)"),
-            @Parameter(name = "groupBy", in = ParameterIn.QUERY, description = "Group by a certain field. use with caution. groupBy can be forbidden by the dao, in order to prevent too much load on the database."),
-            @Parameter(name = "indexValidation", in = ParameterIn.QUERY, schema = @Schema(type = "boolean"), description = "Use with caution during development! Setting thisto true disables the safeguard of ensuring, that the request is can effeciently be supported by the database, meaning a usable index exists. (true by default)"),
-    })
+    @Parameter(name = "segment", in = ParameterIn.PATH, schema = @Schema(type = "string", example = "-"), description = "A rest-dsl query, See https://github.com/researchgate/restler#get")
+    @Parameter(name = "fields", in = ParameterIn.QUERY, description = "Only return this list of comma-separated fields. Use '*' to return all", example = "*")
+    @Parameter(name = "limit", in = ParameterIn.QUERY, schema = @Schema(type = "integer", format = "int32"), description = "Limit the number of returned records")
+    @Parameter(name = "offset", in = ParameterIn.QUERY, schema = @Schema(type = "integer", format = "int32"), description = "Skip this many records. Use this together with limit to implement pagination.")
+    @Parameter(name = "order", in = ParameterIn.QUERY, schema = @Schema(type = "string"), description = "Sort the result by this field in ascending order. The field can be prefixed with '-' to sort in descending order")
+    @Parameter(name = "countTotalItems", in = ParameterIn.QUERY, schema = @Schema(type = "boolean"), description = "whether to count the total items. Setting this to 'false' will remove the 'list.totalItems' property and may improve response times (true by default)")
+    @Parameter(name = "groupBy", in = ParameterIn.QUERY, description = "Group by a certain field. use with caution. groupBy can be forbidden by the dao, in order to prevent too much load on the database.")
+    @Parameter(name = "indexValidation", in = ParameterIn.QUERY, schema = @Schema(type = "boolean"), description = "Use with caution during development! Setting this to true disables the safeguard of ensuring, that the request is can effeciently be supported by the database, meaning a usable index exists. (true by default)")
     @Path(PATH_SEGMENT_PATTERN)
     @GET
     public EntityResult<V> getEntityResult(@PathParam("segment") PathSegment segment, @Context UriInfo uriInfo) throws RestDslException {
@@ -87,16 +84,14 @@ public abstract class BaseServiceResource<V, K> {
     }
 
     @Operation(summary = "Returns a human readable description of the generated database operations. This is intended for client to develop and debug rest-dsl queries")
-    @Parameters({
-            @Parameter(name = "segment", in = ParameterIn.PATH, schema = @Schema(type = "string", example = "-"), description = "A rest-dsl query, See https://github.com/researchgate/restler#get"),
-            @Parameter(name = "fields", in = ParameterIn.QUERY, description = "Only return this list of comma-separated fields. Use '*' to return all", example = "*"),
-            @Parameter(name = "limit", in = ParameterIn.QUERY, schema = @Schema(type = "integer", format = "int32"), description = "Limit the number of returned records"),
-            @Parameter(name = "offset", in = ParameterIn.QUERY, schema = @Schema(type = "integer", format = "int32"), description = "Skip this many records. Use this together with limit to implement pagination."),
-            @Parameter(name = "order", in = ParameterIn.QUERY, schema = @Schema(type = "string"), description = "Sort the result by this field in ascending order. The field can be prefixed with '-' to sort in descending order"),
-            @Parameter(name = "countTotalItems", in = ParameterIn.QUERY, schema = @Schema(type = "boolean"), description = "whether to count the total items. Setting this to 'false' will remove the 'list.totalItems' property and may improve response times (true by default)"),
-            @Parameter(name = "groupBy", in = ParameterIn.QUERY, description = "Group by a certain field. use with caution. groupBy can be forbidden by the dao, in order to prevent too much load on the database."),
-            @Parameter(name = "indexValidation", in = ParameterIn.QUERY, schema = @Schema(type = "boolean"), description = "Use with caution during development! Setting thisto true disables the safeguard of ensuring, that the request is can effeciently be supported by the database, meaning a usable index exists. (true by default)"),
-    })
+    @Parameter(name = "segment", in = ParameterIn.PATH, schema = @Schema(type = "string", example = "-"), description = "A rest-dsl query, See https://github.com/researchgate/restler#get")
+    @Parameter(name = "fields", in = ParameterIn.QUERY, description = "Only return this list of comma-separated fields. Use '*' to return all", example = "*")
+    @Parameter(name = "limit", in = ParameterIn.QUERY, schema = @Schema(type = "integer", format = "int32"), description = "Limit the number of returned records")
+    @Parameter(name = "offset", in = ParameterIn.QUERY, schema = @Schema(type = "integer", format = "int32"), description = "Skip this many records. Use this together with limit to implement pagination.")
+    @Parameter(name = "order", in = ParameterIn.QUERY, schema = @Schema(type = "string"), description = "Sort the result by this field in ascending order. The field can be prefixed with '-' to sort in descending order")
+    @Parameter(name = "countTotalItems", in = ParameterIn.QUERY, schema = @Schema(type = "boolean"), description = "whether to count the total items. Setting this to 'false' will remove the 'list.totalItems' property and may improve response times (true by default)")
+    @Parameter(name = "groupBy", in = ParameterIn.QUERY, description = "Group by a certain field. use with caution. groupBy can be forbidden by the dao, in order to prevent too much load on the database.")
+    @Parameter(name = "indexValidation", in = ParameterIn.QUERY, schema = @Schema(type = "boolean"), description = "Use with caution during development! Setting this to true disables the safeguard of ensuring, that the request is can effeciently be supported by the database, meaning a usable index exists. (true by default)")
     @Path(PATH_SEGMENT_PATTERN + "/info")
     @GET
     public ServiceQueryInfo<K> getQueryInfo(@PathParam("segment") PathSegment segment, @Context UriInfo uriInfo) throws RestDslException {

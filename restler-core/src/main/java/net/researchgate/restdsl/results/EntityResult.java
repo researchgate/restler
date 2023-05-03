@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import javax.ws.rs.core.GenericType;
 import java.lang.reflect.ParameterizedType;
@@ -17,12 +18,17 @@ import java.util.List;
  * General container for entity results
  * TODO: introduce redirects in the right manner
  */
-
+@Schema(description = "The response to to a restler query. Depending on the query, exactly one of the sub fields 'list' or 'multimap' is populated")
 @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class EntityResult<T> implements EntityContainer<T> {
+    @Schema(description = "If the client query contains no groupBy parameter, then this field is populated")
     private EntityList<T> list;
+
+    @Schema(hidden = true, deprecated = true, description = "This field is never populated in restler")
     private EntityMap<T> map;
+
+    @Schema(description = "If the client query contains a groupBy parameter, then this field is populated", example = "null")
     private EntityMultimap<T> multimap;
 
     @JsonIgnore
