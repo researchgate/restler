@@ -91,7 +91,7 @@ public abstract class BaseServiceResource<V, K> {
     @Parameter(name = "order", in = ParameterIn.QUERY, schema = @Schema(type = "string"), description = "Sort the result by this field in ascending order. The field can be prefixed with '-' to sort in descending order")
     @Parameter(name = "countTotalItems", in = ParameterIn.QUERY, schema = @Schema(type = "boolean"), description = "whether to count the total items. Setting this to 'false' will remove the 'list.totalItems' property and may improve response times (true by default)")
     @Parameter(name = "groupBy", in = ParameterIn.QUERY, description = "Group by a certain field. use with caution. groupBy can be forbidden by the dao, in order to prevent too much load on the database.")
-    @Parameter(name = "indexValidation", in = ParameterIn.QUERY, schema = @Schema(type = "boolean"), description = "Use with caution during development! Setting thisto true disables the safeguard of ensuring, that the request is can effeciently be supported by the database, meaning a usable index exists. (true by default)")
+    @Parameter(name = "indexValidation", in = ParameterIn.QUERY, schema = @Schema(type = "boolean"), description = "Use with caution during development! Setting this to true disables the safeguard of ensuring, that the request is can effeciently be supported by the database, meaning a usable index exists. (true by default)")
     @Path(PATH_SEGMENT_PATTERN + "/info")
     @GET
     public ServiceQueryInfo<K> getQueryInfo(@PathParam("segment") PathSegment segment, @Context UriInfo uriInfo) throws RestDslException {
