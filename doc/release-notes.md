@@ -1,5 +1,22 @@
 # Changelog
 
+### 6.0.0
+* Backwards incompatible changes: 
+  * Upgraded to mongodb-driver-sync 4.10.2 and morphia 2.4.4
+  * Upgraded from Java 8 to Java 11
+  * Interface changes: 
+    * preUpdate now uses List<UpdateOperator> instead of UpdateOperations
+    * MongoBaseServiceDao::createUpdateOperations has been removed
+  * Morphia required changes
+    * BasicDAO `morphiaDao` is no longer exposed. Use Datastore `datastore` instead. Examples:
+      * instead of `morphiaDao.save(entity);`, use `datastore.save(entity);`
+      * instead of `morphiaDao.createQuery().filter("test", 123).asList();` use `datastore.find(entityClazz).filter(Filters.eq("test", 123)).iterator().toList();`
+    * Annotation changes
+      * `@Embedded` is no longer supported. Use `@Entity` for embedded documents
+      * Change `@Entity(value = "docs", noClassnameStored = true)` to `@Entity(value = "docs", useDiscriminator = false)`
+  * For ServiceQuery projections, limit, offset, and order to be applied, use MongoBaseServiceDao::get or getOne
+  * If you issue the query not via Restler, you can use MongoBaseServiceDao::toFindOptions to prepare the FindOptions from the ServiceQuery
+
 ### 5.0.0
 * Backwards incompatible change: Upgraded mongoDB client to 4.1.1
 

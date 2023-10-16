@@ -1,14 +1,16 @@
 package net.researchgate.restdsl.model;
 
 import net.researchgate.restdsl.dao.BaseServiceDao;
+import net.researchgate.restdsl.dao.EntityFieldMapper;
 import net.researchgate.restdsl.dao.ServiceDao;
+import net.researchgate.restdsl.domain.EntityInfo;
 import net.researchgate.restdsl.exceptions.RestDslException;
 import net.researchgate.restdsl.queries.ServiceQuery;
 import net.researchgate.restdsl.queries.ServiceQueryInfo;
 import net.researchgate.restdsl.results.EntityResult;
 
 /**
- * This model implements the smalles common subset of operations to the underlying mongo collection.
+ * This model implements the smallest common subset of operations to the underlying mongo collection.
  * Use this model if you want to make sure that your data is only written to in a controlled way.
  *
  * If you want to simply expose CRUD via REST, use a {@link ServiceModel} instead.
@@ -21,6 +23,10 @@ public abstract class BaseServiceModel<V, K> {
 
     public BaseServiceModel(BaseServiceDao<V, K> serviceDao) {
         this.serviceDao = serviceDao;
+    }
+
+    public EntityFieldMapper getEntityMapper() {
+        return serviceDao.getEntityMapper();
     }
 
     protected ServiceDao<V, K> getServiceDao() {

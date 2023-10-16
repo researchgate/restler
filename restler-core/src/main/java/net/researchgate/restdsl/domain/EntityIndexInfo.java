@@ -3,10 +3,12 @@ package net.researchgate.restdsl.domain;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
-import net.researchgate.restdsl.types.TypeInfoUtil;
-import dev.morphia.mapping.MappedClass;
-import dev.morphia.mapping.MappedField;
+import com.mongodb.client.ListIndexesIterable;
+import dev.morphia.Datastore;
+import dev.morphia.mapping.Mapper;
+import dev.morphia.mapping.codec.pojo.EntityModel;
+import dev.morphia.mapping.codec.pojo.PropertyModel;
+import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,16 +27,16 @@ public class EntityIndexInfo<V> {
     private Set<String> indexesMap = new LinkedHashSet<>();
     private Set<String> indexPrefixMap = new LinkedHashSet<>();
 
-    public EntityIndexInfo(Class<V> entityClazz, List<DBObject> indexInfo) {
+    public EntityIndexInfo(Datastore datastore, Class<V> entityClazz, ListIndexesIterable<Document> indexInfo) {
         List<String> indexStrings = new ArrayList<>();
-        for (DBObject dbObject : indexInfo) {
-            BasicDBObject dbo = (BasicDBObject) dbObject;
-            BasicDBObject keyObj = (BasicDBObject) dbo.get("key");
+        for (Document doc : indexInfo) {
+
+            Document keyObj = (Document) doc.get("key");
             List<String> components = new ArrayList<>();
             for (Map.Entry<String, Object> e : keyObj.entrySet()) {
                 String val = e.getValue().toString();
                 String mongoIndexNameStr = e.getKey();
-                String entityFieldName = getJavaFieldNames(entityClazz, mongoIndexNameStr);
+                String entityFieldName = getJavaFieldNames(datastore, entityClazz, mongoIndexNameStr);
                 if (entityFieldName == null) {
                     LOGGER.error("Cannot find the mapping from MongoDB index '" + mongoIndexNameStr + "' to Java entities, skipping...");
                     continue;
@@ -70,22 +72,25 @@ public class EntityIndexInfo<V> {
         computeMaps(indexStrings);
     }
 
-    private String getJavaFieldNames(Class<?> entityClazz, String mongoIndexName) {
+    private String getJavaFieldNames(Datastore datastore, Class<?> entityClazz, String mongoIndexName) {
         List<String> comps = Splitter.on('.').splitToList(mongoIndexName);
         List<String> javaComps = new ArrayList<>();
         Class<?> currentClazz = entityClazz;
+
+        Mapper mapper = datastore.getMapper();
         for (String comp : comps) {
-            MappedClass mc = TypeInfoUtil.MAPPER.getMappedClass(currentClazz);
-            MappedField mf = mc.getMappedField(comp);
+
+            EntityModel mc = mapper.getEntityModel(currentClazz);
+            PropertyModel mf = mc.getProperty(comp);
             if (mf == null) {
                 return null;
             }
-            javaComps.add(mf.getJavaFieldName());
+            javaComps.add(mf.getName());
             //noinspection unchecked
             if (mf.getType().isAssignableFrom(List.class)) {
-                currentClazz = (Class<?>) mf.getSubType();
+                currentClazz = mf.getNormalizedType();
             } else {
-                currentClazz = mf.getConcreteType();
+                currentClazz = mf.getType();
             }
         }
 

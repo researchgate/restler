@@ -1,5 +1,6 @@
 package net.researchgate.restdsl.dao;
 
+import dev.morphia.mapping.Mapper;
 import net.researchgate.restdsl.exceptions.RestDslException;
 import net.researchgate.restdsl.queries.ServiceQuery;
 
@@ -30,4 +31,5 @@ public interface PersistentServiceDao<V, K> extends BaseServiceDao<V, K>, Entity
 
 
     V patch(ServiceQuery<K> q, Map<String, Object> patchedFields) throws RestDslException;
+
 }

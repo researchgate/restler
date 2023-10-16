@@ -3,6 +3,7 @@ package net.researchgate.restler.domain;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import dev.morphia.annotations.Embedded;
 import net.researchgate.restler.serde.ObjectIdDeserializer;
 import net.researchgate.restler.serde.ObjectIdSerializer;
 import net.researchgate.restler.serde.Rfc3339DateDeserializer;

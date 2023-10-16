@@ -13,6 +13,5 @@ import javax.validation.constraints.NotNull;
 public class RestlerConfig extends Configuration {
     @JsonProperty
     @Valid
-    @NotNull
     public MongoClientBuilder mongoConfig;
 }

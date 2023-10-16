@@ -2,19 +2,21 @@ package net.researchgate.restler.service.dao;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import dev.morphia.query.updates.UpdateOperator;
+import dev.morphia.query.updates.UpdateOperators;
 import net.researchgate.restdsl.dao.MongoServiceDao;
 import net.researchgate.restdsl.exceptions.RestDslException;
 import net.researchgate.restdsl.queries.ServiceQuery;
 import net.researchgate.restler.domain.Account;
 import org.bson.types.ObjectId;
 import dev.morphia.Datastore;
-import dev.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Account dao
@@ -44,14 +46,12 @@ public class AccountDao extends MongoServiceDao<Account, ObjectId> {
     }
 
     @Override
-    public void preUpdate(ServiceQuery<ObjectId> q, UpdateOperations<Account> updateOperations) {
-        updateOperations.set("modifiedAt", new Date());
+    public void preUpdate(ServiceQuery<ObjectId> q, List<UpdateOperator> updateOperations) {
+        updateOperations.add(UpdateOperators.set("modifiedAt", new Date()));
     }
 
     public Account changeAccountMentor(ServiceQuery<ObjectId> q, ObjectId mentorId) throws RestDslException {
-        UpdateOperations<Account> ops = createUpdateOperations();
-        ops.set("mentorAccountId", mentorId);
-        return findAndModify(q, ops);
+        return findAndModify(q, List.of(UpdateOperators.set("mentorAccountId", mentorId)));
     }
 
 }

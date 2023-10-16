@@ -2,6 +2,7 @@ package net.researchgate.restdsl.util;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import net.researchgate.restdsl.dao.GenericFieldMapper;
 import net.researchgate.restdsl.entities.TestEntity;
 import net.researchgate.restdsl.exceptions.RestDslException;
 import net.researchgate.restdsl.queries.ServiceQuery;
@@ -110,7 +111,7 @@ public class RequestUtilTest {
 
 
         ServiceQuery<Long> query = RequestUtil.parseRequest(TestEntity.class, Long.class, pathSegment, emptyUriInfo,
-                ServiceQueryParams.DEFAULT_QUERY_PARAMS);
+                ServiceQueryParams.DEFAULT_QUERY_PARAMS, new GenericFieldMapper());
         System.out.println("Created query: " + query);
         return query;
     }

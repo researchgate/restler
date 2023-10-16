@@ -64,11 +64,11 @@ public class TypeInfoUtilTest {
 
     @Test
     public void testDateDeserializationOnSetter() throws Exception {
-        TypeInfoUtil.getValue("2015-03-26T09:08:28.639+0100", "dateField", Date.class, TestClassWithSetterAnnotation.class);
+        TypeInfoUtil.getValue("2015-03-26T09:08:28.639+0100", Date.class);
     }
 
     @Test
     public void testDateDeserializationOnDeclaration() throws Exception {
-        TypeInfoUtil.getValue("2015-03-26T09:08:28.639+0100", "dateField", Date.class, TestClassWithDeclarationAnnotation.class);
+        TypeInfoUtil.getValue("2015-03-26T09:08:28.639+0100", Date.class);
     }
 }

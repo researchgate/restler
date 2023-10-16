@@ -1,15 +1,32 @@
 package net.researchgate.restler.service.mongo;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.mongodb.MongoClient;
+import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientOptions;
+import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoClientURI;
+import com.mongodb.MongoException;
 import com.mongodb.ReadPreference;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClientFactory;
+import com.mongodb.client.MongoClients;
+import com.mongodb.event.ConnectionPoolListener;
 import io.dropwizard.lifecycle.Managed;
 import io.dropwizard.setup.Environment;
+import org.bson.codecs.Codec;
+import org.bson.codecs.configuration.CodecRegistries;
+import org.bson.codecs.configuration.CodecRegistry;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class MongoClientBuilder {
 
@@ -49,6 +66,8 @@ public class MongoClientBuilder {
 
     @JsonProperty
     private String readPreference;
+
+    private List<Codec<?>> codecs;
 
     public MongoClientBuilder() {
     }
@@ -113,38 +132,74 @@ public class MongoClientBuilder {
         return this;
     }
 
+    public MongoClientBuilder codes(List<Codec<?>> codecs) {
+        this.codecs = codecs;
+        return this;
+    }
+
     public MongoClient buildUnmanaged() {
-        LOGGER.info("Creating new mongo client: {}", uri);
+        MongoClientSettings.Builder settingsBuilder = getOptionsBuilder();
 
-        MongoClientOptions.Builder options = MongoClientOptions.builder();
+        LOGGER.info("Creating new mongo client: {}, options {}", stripPassword(uri), settingsBuilder);
 
-        if (minConnectionsPerHost != null) {
-            options.minConnectionsPerHost(minConnectionsPerHost);
+        return MongoClients.create(settingsBuilder.build());
+    }
+
+    protected static String stripPassword(String uri) {
+        String saveUri = uri;
+        int at = uri.indexOf('@');
+        if (at > 0) {
+            int col = uri.indexOf(':');
+            if (col > 0) {
+                saveUri = uri.substring(0, col) + "password" + uri.substring(at);
+            }
         }
-        if (connectionsPerHost != null) {
-            options.connectionsPerHost(connectionsPerHost);
-        }
-        if (maxWaitTime != null) {
-            options.maxWaitTime(maxWaitTime);
-        }
-        if (maxConnectionIdleTime != null) {
-            options.maxConnectionIdleTime(maxConnectionIdleTime);
-        }
-        if (maxConnectionLifeTime != null) {
-            options.maxConnectionLifeTime(maxConnectionLifeTime);
-        }
-        if (connectTimeout != null) {
-            options.connectTimeout(connectTimeout);
-        }
-        if (socketTimeout != null) {
-            options.socketTimeout(socketTimeout);
-        }
+        return saveUri;
+    }
+    protected MongoClientSettings.Builder getOptionsBuilder() {
+        MongoClientSettings.Builder options = MongoClientSettings.builder();
+
+        options.applyConnectionString(new ConnectionString(uri));
+
+        options.applyToConnectionPoolSettings(b -> {
+            if (minConnectionsPerHost != null) {
+                b.minSize(minConnectionsPerHost);
+            }
+            if (connectionsPerHost != null) {
+                b.maxSize(connectionsPerHost);
+            }
+            if (maxWaitTime != null) {
+                b.maxWaitTime(maxWaitTime, TimeUnit.MILLISECONDS);
+            }
+            if (maxConnectionIdleTime != null) {
+                b.maxConnectionIdleTime(maxConnectionIdleTime, TimeUnit.MILLISECONDS);
+            }
+            if (maxConnectionLifeTime != null) {
+                b.maxConnectionLifeTime(maxConnectionLifeTime, TimeUnit.MILLISECONDS);
+            }
+        });
+
+        options.applyToSocketSettings(b -> {
+            if (connectTimeout != null) {
+                b.connectTimeout(connectTimeout, TimeUnit.MILLISECONDS);
+            }
+            if (socketTimeout != null) {
+                b.readTimeout(socketTimeout, TimeUnit.MILLISECONDS);
+            }
+        });
+
         if (readPreference != null) {
             options.readPreference(ReadPreference.valueOf(readPreference));
         }
 
-        MongoClientURI mongoClientURI = new MongoClientURI(uri, options);
-        return new MongoClient(mongoClientURI);
+        if (codecs != null) {
+            CodecRegistry codecRegistry = CodecRegistries.fromRegistries(
+                    MongoClientSettings.getDefaultCodecRegistry(),
+                    CodecRegistries.fromCodecs(codecs));
+            options.codecRegistry(codecRegistry);
+        }
+
+        return options;
     }
 
     public MongoClient build(Environment environment) {

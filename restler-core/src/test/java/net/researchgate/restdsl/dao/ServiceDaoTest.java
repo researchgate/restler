@@ -1,12 +1,12 @@
 package net.researchgate.restdsl.dao;
 
 import com.google.common.collect.Lists;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBCollection;
-import com.mongodb.MongoClient;
-import com.mongodb.ServerAddress;
-import de.bwaldvogel.mongo.MongoServer;
-import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
+import com.mongodb.ConnectionString;
+import com.mongodb.MongoClientSettings;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import dev.morphia.Datastore;
+import dev.morphia.Morphia;
 import net.researchgate.restdsl.TestEntity;
 import net.researchgate.restdsl.exceptions.RestDslException;
 import net.researchgate.restdsl.metrics.NoOpStatsReporter;
@@ -16,39 +16,45 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import dev.morphia.Datastore;
-import dev.morphia.Morphia;
-
-import java.net.InetSocketAddress;
+import org.testcontainers.containers.GenericContainer;
 
 import static net.researchgate.restdsl.exceptions.RestDslException.Type.QUERY_ERROR;
 import static org.junit.Assert.fail;
 
 public class ServiceDaoTest {
 
-    // This merely allow us to spin up a a dao.
+    public static GenericContainer mongoDBContainer = new GenericContainer("mongo:4.4").withExposedPorts(27017);
+
     private Datastore fakedDatastore;
-    private MongoServer server;
     private MongoClient client;
 
     @Before
     public void setUp() {
-        server = new MongoServer(new MemoryBackend());
-        // bind on a random local port
-        InetSocketAddress serverAddress = server.bind();
-        client = new MongoClient(new ServerAddress(serverAddress));
-        fakedDatastore = new Morphia().createDatastore(client, "testDatabase");
+        mongoDBContainer.start();
+
+        ConnectionString uri = new ConnectionString("mongodb://" + mongoDBContainer.getHost() + ":" + mongoDBContainer.getMappedPort(27017));
+        System.setProperty("dw.mongoConfig.uri", uri.toString());
+        System.setProperty("dw.mongoConfig.tls", "false");
+        System.setProperty("dw.mongoConfig.dbName", "testDatabase");
+        MongoClientSettings clientSettings = MongoClientSettings.builder()
+                .applyConnectionString(uri)
+                .build();
+
+
+        client = MongoClients.create(clientSettings);
+        fakedDatastore = Morphia.createDatastore(client, "testDatabase");
+        final TestServiceDao dao = new TestServiceDao(fakedDatastore, TestEntity.class);
 
         // insert and remove an item in order to create indexes
-        final DBCollection collection = fakedDatastore.getCollection(TestEntity.class);
-        final Object id = collection.insert(new BasicDBObject()).getUpsertedId();
-        collection.remove(new BasicDBObject("_id", id));
+        TestEntity dbEntity = dao.save(new TestEntity(1L, "test"));
+        dao.delete(dbEntity.getId());
     }
 
     @After
     public void tearDown() throws Exception {
+        // Clean up resources.
+        mongoDBContainer.stop();
         client.close();
-        server.shutdown();
     }
 
     @Test

@@ -5,6 +5,12 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+import dev.morphia.Datastore;
+import dev.morphia.DeleteOptions;
+import dev.morphia.query.FindOptions;
+import dev.morphia.query.Query;
+import dev.morphia.query.Sort;
+import dev.morphia.query.filters.Filter;
 import net.researchgate.restdsl.domain.EntityIndexInfo;
 import net.researchgate.restdsl.domain.EntityInfo;
 import net.researchgate.restdsl.exceptions.RestDslException;
@@ -17,14 +23,8 @@ import net.researchgate.restdsl.queries.ServiceQueryReservedValue;
 import net.researchgate.restdsl.results.EntityList;
 import net.researchgate.restdsl.results.EntityMultimap;
 import net.researchgate.restdsl.results.EntityResult;
-import net.researchgate.restdsl.types.TypeInfoUtil;
 import net.researchgate.restdsl.util.ServiceQueryUtil;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.tuple.Pair;
-import dev.morphia.Datastore;
-import dev.morphia.dao.BasicDAO;
-import dev.morphia.query.Query;
-import dev.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +38,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import static dev.morphia.query.filters.Filters.elemMatch;
+import static dev.morphia.query.filters.Filters.eq;
+import static dev.morphia.query.filters.Filters.exists;
+import static dev.morphia.query.filters.Filters.gt;
+import static dev.morphia.query.filters.Filters.gte;
+import static dev.morphia.query.filters.Filters.in;
+import static dev.morphia.query.filters.Filters.lt;
+import static dev.morphia.query.filters.Filters.lte;
+import static dev.morphia.query.filters.Filters.nin;
 
 /**
  * This Dao implements common access to the underlying mongo collection.
@@ -57,7 +67,6 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
 
     private static final String QUERY_KEY = "queries.shapes.%s.%%H";
     protected final String collectionName;
-    protected final BasicDAO<V, K> morphiaDao;
     protected final Class<V> entityClazz;
     protected final EntityInfo<V> entityInfo;
     protected final EntityIndexInfo<V> entityIndexInfo;
@@ -66,18 +75,28 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
     // group by operations may require a lot of requests to the database. We should have to explicitly enable it
     protected boolean allowGroupBy = false;
 
+    protected final Datastore datastore;
+    private final EntityFieldMapper entityMapper;
+
     public MongoBaseServiceDao(Datastore datastore, Class<V> entityClazz) {
         this(datastore, entityClazz, NoOpStatsReporter.INSTANCE);
     }
     //TODO: provide implementations for StatsReporter in example service
     public MongoBaseServiceDao(Datastore datastore, Class<V> entityClazz, StatsReporter statsReporter) {
-        this.morphiaDao = new BasicDAO<>(entityClazz, datastore);
-        this.collectionName = morphiaDao.getCollection().getName();
+
+        this.datastore = datastore;
+        this.collectionName = datastore.getMapper().getEntityModel(entityClazz).getCollectionName();
         this.entityClazz = entityClazz;
-        this.entityInfo = EntityInfo.get(entityClazz);
-        this.entityIndexInfo = new EntityIndexInfo<>(entityClazz, morphiaDao.getCollection().getIndexInfo());
+        this.entityMapper = new MongoEntityFieldMapper(datastore);
+        this.entityInfo = EntityInfo.get(entityMapper, entityClazz);
+        this.entityIndexInfo = new EntityIndexInfo<>(datastore, entityClazz, datastore.getCollection(entityClazz).listIndexes());
         this.statsReporter = statsReporter;
         validateMorphiaAnnotations(entityClazz, new HashSet<>());
+    }
+
+    @Override
+    public EntityFieldMapper getEntityMapper() {
+        return entityMapper;
     }
 
     /**
@@ -89,8 +108,65 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
         this.allowGroupBy = true;
     }
 
+    public FindOptions toFindOptions(ServiceQuery<K>  serviceQuery) {
+
+        FindOptions findOptions = new FindOptions();
+
+        if (serviceQuery.getFields() != null) {
+            Set<String> excludedFields = Sets.newHashSet();
+            Set<String> includedFields = Sets.newHashSet();
+            boolean all = false;
+            for (String f : serviceQuery.getFields()) {
+                if (f.equals("*")) {
+                    all = true;
+                } else {
+                    if (f.startsWith("-")) {
+                        excludedFields.add(f.substring(1));
+                    } else {
+                        includedFields.add(f);
+                    }
+                }
+            }
+
+            if (!excludedFields.isEmpty() && !includedFields.isEmpty()) {
+                throw new RestDslException("Query cannot have both included and excluded fields", RestDslException.Type.QUERY_ERROR);
+            }
+
+            if (!all) {
+                if (!includedFields.isEmpty()) {
+                    findOptions.projection().include(includedFields.toArray(new String[0]));
+                } else {
+                    // only excluded fields were provided
+                    findOptions.projection().include(excludedFields.toArray(new String[0]));
+                }
+            } else {
+                // provided * but also excluded fields
+                if (!excludedFields.isEmpty()) {
+                    findOptions.projection().include(excludedFields.toArray(new String[0]));
+                }
+            }
+        }
+
+        findOptions.skip(serviceQuery.getOffset());
+        findOptions.limit(serviceQuery.getLimit());
+
+        if (serviceQuery.getOrder() != null) {
+            findOptions.sort(parseSortString(serviceQuery.getOrder()));
+        }
+        return findOptions;
+    }
+
+    private static Sort parseSortString(String sortString) {
+        // Check if the string starts with "-" indicating descending order
+        if (sortString.startsWith("-")) {
+            return Sort.descending(sortString.substring(1)); // Remove the "-" character
+        }
+        return Sort.ascending(sortString);
+    }
+
     public EntityResult<V> get(ServiceQuery<K> serviceQuery) throws RestDslException {
         Query<V> morphiaQuery = convertToMorphiaQuery(serviceQuery);
+        FindOptions findOptions = toFindOptions(serviceQuery);
 
         try (StatsTimingWrapper ignored = getQueryShapeWrapper(serviceQuery)) {
             String groupBy = serviceQuery.getGroupBy();
@@ -98,7 +174,7 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
                 List<V> results = Collections.emptyList();
                 if (!serviceQuery.getCountOnly()) {
                     LOGGER.debug("Executing query {}", morphiaQuery);
-                    results = morphiaDao.find(morphiaQuery).asList();
+                    results = morphiaQuery.iterator(findOptions).toList();
                 }
                 return new EntityResult<>(results, getTotalItemsCnt(morphiaQuery, serviceQuery, results));
             } else {
@@ -116,7 +192,7 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
                     List<V> resultPerKey = Collections.emptyList();
                     if (!serviceQuery.getCountOnly()) {
                         LOGGER.debug("Executing query {}", q);
-                        resultPerKey = morphiaDao.find(q).asList();
+                        resultPerKey = q.iterator(findOptions).toList();
                     }
 
                     EntityList<V> entityList = new EntityList<>(resultPerKey, getTotalItemsCnt(q, serviceQuery, resultPerKey));
@@ -128,7 +204,7 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
     }
 
     public V getOne(ServiceQuery<K> serviceQuery) throws RestDslException {
-        return morphiaDao.findOne(convertToMorphiaQuery(serviceQuery));
+        return convertToMorphiaQuery(serviceQuery).first(toFindOptions(serviceQuery));
     }
 
     public long count(ServiceQuery<K> serviceQuery) throws RestDslException {
@@ -136,75 +212,26 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
     }
 
     public int delete(K id) {
-        return morphiaDao.deleteById(id).getN();
+        return Math.toIntExact(datastore.find(entityClazz)
+                .filter(eq("_id", id))
+                .delete(new DeleteOptions().multi(false))
+                .getDeletedCount());
     }
 
-    protected UpdateOperations<V> createUpdateOperations() {
-        return morphiaDao.createUpdateOperations();
-    }
-
-    protected Query<V> convertToMorphiaQuery(ServiceQuery<K> serviceQuery) throws RestDslException {
-        return convertToMorphiaQuery(serviceQuery, true);
-    }
-
-    protected Query<V> convertToMorphiaQuery(ServiceQuery<K> serviceQuery, boolean getQuery) throws RestDslException {
+    Query<V> convertToMorphiaQuery(ServiceQuery<K> serviceQuery) throws RestDslException {
         validateQuery(serviceQuery);
 
-        Query<V> mongoQuery = morphiaDao.createQuery();
+        Query<V> mongoQuery = datastore.find(entityClazz);
 
         Collection<K> ids = serviceQuery.getIdList();
         if (ids != null) {
+
             if (ids.size() == 1) {
-                mongoQuery.field(entityInfo.getIdFieldName()).equal(ids.iterator().next());
+                mongoQuery.filter(eq(entityInfo.getIdFieldName(), ids.iterator().next()));
             } else {
-                mongoQuery.field(entityInfo.getIdFieldName()).hasAnyOf(ids);
+                mongoQuery.filter(in(entityInfo.getIdFieldName(), ids));
             }
         }
-
-        if (getQuery) {
-            if (serviceQuery.getFields() != null) {
-                Set<String> excludedFields = Sets.newHashSet();
-                Set<String> includedFields = Sets.newHashSet();
-                boolean all = false;
-                for (String f : serviceQuery.getFields()) {
-                    if (f.equals("*")) {
-                        all = true;
-                    } else {
-                        if (f.startsWith("-")) {
-                            excludedFields.add(f.substring(1));
-                        } else {
-                            includedFields.add(f);
-                        }
-                    }
-                }
-
-                if (!excludedFields.isEmpty() && !includedFields.isEmpty()) {
-                    throw new RestDslException("Query cannot have both included and excluded fields", RestDslException.Type.QUERY_ERROR);
-                }
-
-                if (!all) {
-                    if (!includedFields.isEmpty()) {
-                        includedFields.forEach(f -> mongoQuery.project(f, true));
-                    } else {
-                        // only excluded fields were provided
-                        excludedFields.forEach(f -> mongoQuery.project(f, false));
-                    }
-                } else {
-                    // provided * but also excluded fields
-                    if (!excludedFields.isEmpty()) {
-                        excludedFields.forEach(f -> mongoQuery.project(f, false));
-                    }
-                }
-            }
-
-            mongoQuery.offset(serviceQuery.getOffset());
-            mongoQuery.limit(serviceQuery.getLimit());
-
-            if (serviceQuery.getOrder() != null) {
-                mongoQuery.order(serviceQuery.getOrder());
-            }
-        }
-
 
         if (serviceQuery.getCriteria() != null) {
             Multimap<String, String> syncMatchToCriteriaKeys = HashMultimap.create();
@@ -224,20 +251,18 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
                 }
 
                 Collection<Object> objs = serviceQuery.getCriteria().get(k);
-                enrichQuery(mongoQuery, k, objs);
+                mongoQuery.filter(prepareFilters(k, objs));
             }
 
             if (!syncMatchToCriteriaKeys.isEmpty()) {
                 for (String k : syncMatchToCriteriaKeys.keySet()) {
                     Collection<String> criteriaKeys = syncMatchToCriteriaKeys.get(k);
-
-                    Pair<Class<?>, Class<?>> fieldExpressionClazz = TypeInfoUtil.getFieldExpressionClazz(entityClazz, k);
-                    Query<?> subFieldQuery = morphiaDao.getDatastore().createQuery(fieldExpressionClazz.getLeft());
+                    List<Filter> elemMatchFilters = Lists.newArrayList();
                     for (String criteriaKey : criteriaKeys) {
-                        enrichQuery(subFieldQuery, criteriaKey.substring(k.length() + 1), serviceQuery.getCriteria().get(criteriaKey));
+                        elemMatchFilters.addAll(List.of(prepareFilters(criteriaKey.substring(k.length() + 1), serviceQuery.getCriteria().get(criteriaKey))));
                     }
 
-                    mongoQuery.field(k).elemMatch(subFieldQuery);
+                    mongoQuery.filter(elemMatch(k, elemMatchFilters.toArray(new Filter[0])));
                 }
             }
         }
@@ -245,26 +270,49 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
         return mongoQuery;
     }
 
-    private void enrichQuery(Query<?> mongoQuery, String field, Collection<Object> criteria) {
+    private Filter[] prepareFilters(String field, Collection<Object> criteria) {
+        List<Filter> filters = Lists.newArrayList();
         if (criteria.size() == 1) {
             // range query
             Object val = criteria.iterator().next();
             // TODO: rather operatte on ParsedField and have a method to determine whether it's some operation
             if (field.contains(">") || field.contains("<")) {
-                mongoQuery.filter(field, val);
+                final String[] parts = field.trim().split(" ");
+                if (parts.length < 2) {
+                    throw new IllegalArgumentException("'" + field + "' is not a valid filter condition");
+                }
+                String operator = parts[1];
+                if ("<".equals(operator)) {
+                    filters.add(lt(parts[0], val));
+                } else if ("<=".equals(operator)) {
+                    filters.add(lte(parts[0], val));
+                } else if (">=".equals(operator)) {
+                    filters.add(gte(parts[0], val));
+                } else if (">".equals(operator)) {
+                    filters.add(gt(parts[0], val));
+                }
             } else if (val instanceof ServiceQueryReservedValue) {
-                adaptToReservedValue(mongoQuery, field, (ServiceQueryReservedValue) val);
+                if (val == ServiceQueryReservedValue.EXISTS) {
+                    filters.add(exists(field));
+                } else if (val == ServiceQueryReservedValue.NULL) {
+                    filters.add(eq(field, null));
+                } else if (val == ServiceQueryReservedValue.ANY) {
+                    // no op
+                } else {
+                    throw new RestDslException("Unhandled reserved value: " + val, RestDslException.Type.GENERAL_ERROR);
+                }
             } else {
-                mongoQuery.field(field).equal(val);
+                filters.add(eq(field, val));
             }
         } else {
             // TODO: deal nicely with other operations
             if (field.contains("<>")) {
-                mongoQuery.field(ServiceQueryUtil.parseQueryField(field).getFieldName()).notIn(criteria);
+                filters.add(nin(ServiceQueryUtil.parseQueryField(field).getFieldName(), criteria.toArray(new Object[0])));
             } else {
-                mongoQuery.field(field).in(criteria);
+                filters.add(in(field, criteria));
             }
         }
+        return filters.toArray(new Filter[0]);
     }
 
     // optimization. If the returned set is smaller than limit, that means we can calculate size without countAll()
@@ -273,9 +321,9 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
             return null;
         }
 
-        if (results.size() > q.getLimit()) {
+        if (results.size() > serviceQuery.getLimit()) {
             throw new RestDslException("Implementation error: results size must be not greater than limit, was " +
-                    results.size() + " but limit was: " + q.getLimit());
+                    results.size() + " but limit was: " + serviceQuery.getLimit());
         }
 
         if (serviceQuery.getCountOnly()) {
@@ -283,27 +331,15 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
         }
 
         // if getLimit == 0 then we need to count anyway
-        if (results.size() == 0 && q.getOffset() == 0 && q.getLimit() > 0) {
+        if (results.size() == 0 && serviceQuery.getOffset() == 0 && serviceQuery.getLimit() > 0) {
             return 0L;
         }
 
         // if size is equal 0 it could be that offset is too big, or we just have 0 elements in total - must count
-        if (results.size() != 0 && results.size() < q.getLimit()) {
-            return (long) (q.getOffset() + results.size());
+        if (results.size() != 0 && results.size() < serviceQuery.getLimit()) {
+            return (long) (serviceQuery.getOffset() + results.size());
         } else {
             return q.count();
-        }
-    }
-
-    private void adaptToReservedValue(Query<?> mongoQuery, String k, ServiceQueryReservedValue val) {
-        if (val == ServiceQueryReservedValue.EXISTS) {
-            mongoQuery.criteria(k).exists();
-        } else if (val == ServiceQueryReservedValue.NULL) {
-            mongoQuery.field(k).equal(null);
-        } else if (val == ServiceQueryReservedValue.ANY) {
-            // no op
-        } else {
-            throw new RestDslException("Unhandled reserved value: " + val, RestDslException.Type.GENERAL_ERROR);
         }
     }
 

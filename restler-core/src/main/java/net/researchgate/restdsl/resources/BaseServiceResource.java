@@ -47,7 +47,7 @@ public abstract class BaseServiceResource<V, K> {
         this.serviceModel = serviceModel;
         this.entityClazz = entityClazz;
         this.idClazz = idClazz;
-        entityInfo = EntityInfo.get(entityClazz);
+        this.entityInfo = EntityInfo.get(serviceModel.getEntityMapper(), entityClazz);
     }
 
     @SuppressWarnings("unchecked")
@@ -63,8 +63,8 @@ public abstract class BaseServiceResource<V, K> {
         ParameterizedType t = (ParameterizedType) serviceModel.getClass().getAnnotatedSuperclass().getType();
         this.entityClazz = (Class<V>) t.getActualTypeArguments()[0];
         this.idClazz = (Class<K>) t.getActualTypeArguments()[1];
-        entityInfo = EntityInfo.get(entityClazz);
         this.serviceModel = serviceModel;
+        this.entityInfo = EntityInfo.get(serviceModel.getEntityMapper(), entityClazz);
     }
 
     @Operation(summary = "Retrieve entities using the generic researchgate 'restler' query-language: https://github.com/researchgate/restler#get")
@@ -120,11 +120,11 @@ public abstract class BaseServiceResource<V, K> {
 //    }
 
     protected K getId(String id) throws RestDslException {
-        return TypeInfoUtil.getValue(id, EntityInfo.get(entityClazz).getIdFieldName(), idClazz, entityClazz);
+        return TypeInfoUtil.getValue(id, idClazz);
     }
 
     protected ServiceQuery<K> getQueryFromRequest(PathSegment segment, UriInfo uriInfo) throws RestDslException {
-        return RequestUtil.parseRequest(entityClazz, idClazz, segment, uriInfo, getServiceQueryParams());
+        return RequestUtil.parseRequest(entityClazz, idClazz, segment, uriInfo, getServiceQueryParams(), serviceModel.getEntityMapper());
     }
 
 

@@ -24,6 +24,11 @@ public abstract class RestApiServiceDao<V, K> implements ServiceDao<V, K> {
     }
 
     @Override
+    public EntityFieldMapper getEntityMapper() {
+        return new GenericFieldMapper();
+    }
+
+    @Override
     public EntityResult<V> get(ServiceQuery<K> serviceQuery) throws RestDslException {
         Invocation.Builder request = client.target(baseUrl + serviceQuery.toUrlPart()).request();
 

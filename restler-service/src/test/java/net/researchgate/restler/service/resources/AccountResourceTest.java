@@ -5,6 +5,9 @@ import com.google.common.collect.Sets;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.squarespace.jersey2.guice.JerseyGuiceUtils;
+import dev.morphia.Datastore;
+import dev.morphia.Morphia;
 import io.dropwizard.jersey.guava.OptionalMessageBodyWriter;
 import io.dropwizard.jersey.guava.OptionalParamFeature;
 import io.dropwizard.testing.junit.ResourceTestRule;
@@ -18,19 +21,21 @@ import net.researchgate.restler.domain.Account;
 import net.researchgate.restler.domain.AccountState;
 import net.researchgate.restler.domain.AccountStats;
 import net.researchgate.restler.domain.Publication;
+import net.researchgate.restler.service.dao.AccountDao;
+import net.researchgate.restler.service.dao.PublicationDao;
 import net.researchgate.restler.service.exceptions.ServiceException;
 import net.researchgate.restler.service.exceptions.ServiceExceptionMapper;
 import net.researchgate.restler.service.model.AccountModel;
 import net.researchgate.restler.service.model.PublicationModel;
 import net.researchgate.restler.service.modules.TestRestlerModule;
-import net.researchgate.restler.service.util.AbstractMongoDBTest;
+import net.researchgate.restler.service.util.MongoDContainerRule;
 import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-import dev.morphia.Datastore;
-import dev.morphia.Morphia;
+import org.testcontainers.containers.GenericContainer;
 
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.client.Entity;
@@ -51,10 +56,7 @@ import static org.junit.Assert.fail;
  * Account resource test
  */
 
-public class AccountResourceTest extends AbstractMongoDBTest {
-
-    @Inject
-    private Datastore datastore;
+public class AccountResourceTest {
 
     @Inject
     private PublicationModel publicationModel;
@@ -62,11 +64,13 @@ public class AccountResourceTest extends AbstractMongoDBTest {
     @Inject
     private AccountModel accountModel;
 
-    private static TestRestlerModule testRestlerModule = new TestRestlerModule();
-    private static Injector injector = Guice.createInjector(testRestlerModule);
-
     @Rule
     public ResourceTestRule resources = getResources();
+
+    private static Injector injector;
+
+    @ClassRule
+    public static final MongoDContainerRule MONGODB = new MongoDContainerRule("testDb");
 
     private ResourceTestRule getResources() {
         return ResourceTestRule.builder()
@@ -80,22 +84,24 @@ public class AccountResourceTest extends AbstractMongoDBTest {
 
     private static Random rnd = new Random();
 
+    static {
+        JerseyGuiceUtils.install((s, serviceLocator) -> null);
+    }
+
     @BeforeClass
-    public static void setUpDB() {
-        resetDb();
+    public static void setUp() {
+        MONGODB.start();
+        injector = Guice.createInjector(new TestRestlerModule(MONGODB));
+        MONGODB.getDatastore().getMapper().map(Account.class);
+        MONGODB.getDatastore().getMapper().map(Publication.class);
+        MONGODB.getDatastore().ensureIndexes();
     }
 
     @Before
     public void setUpTest() {
-        resetDb();
+        MONGODB.getDatastore().getDatabase().drop();
+        MONGODB.getDatastore().ensureIndexes();
         injector.injectMembers(this);
-    }
-
-    private static void resetDb() {
-        Datastore ds = injector.getInstance(Datastore.class);
-        ds.getDB().dropDatabase();
-        injector.getInstance(Morphia.class).mapPackageFromClass(Account.class);
-        ds.ensureIndexes();
     }
 
     @Test
@@ -206,13 +212,6 @@ public class AccountResourceTest extends AbstractMongoDBTest {
         for (EntityList<Account> v : mm.getItems().values()) {
             assertEquals(1, (long) v.getTotalItems());
         }
-
-
-//
-//        assertThat(response.getStatusInfo()).isEqualTo(Response.Status.OK);
-//        assertThat(response.readEntity(EntityResult.class).getTotalItems()).isEqualTo(1);
-//
-//        resources.client().target("/accounts/-;id <=" + savedAccount.getId()).request().get();
     }
 
     @Test
@@ -271,9 +270,6 @@ public class AccountResourceTest extends AbstractMongoDBTest {
         account.setAdditionalStats(Lists.newArrayList(new AccountStats(1, 1), new AccountStats(2, 2)));
         postAccount(account);
 
-//        account.setNickname("nik");
-//        postAccount(account);
-
         Response response;
         EntityResult<Account> res;
 
@@ -291,7 +287,6 @@ public class AccountResourceTest extends AbstractMongoDBTest {
                 .target("/accounts/-;rating=1;nickname=$any;additionalStats.publicationCnt=1;additionalStats.followerCnt=1?syncMatch=additionalStats").request().get();
         res = readResponseOrFail(Account.class, response);
         assertEquals(1, res.getList().getItems().size());
-
     }
 
 
@@ -386,8 +381,9 @@ public class AccountResourceTest extends AbstractMongoDBTest {
         account = response.readEntity(Account.class);
 
         ObjectId mentorId = new ObjectId();
-        accountModel.changeMentor(account.getId(), mentorId);
-        ObjectId dbMentorId = accountModel.get(account.getId()).asList().get(0).getMentorAccountId();
+        Account account1 = accountModel.changeMentor(account.getId(), mentorId);
+        EntityResult<Account> dbAccount = accountModel.get(account.getId());
+        ObjectId dbMentorId = dbAccount.asList().get(0).getMentorAccountId();
         assertEquals(mentorId, dbMentorId);
     }
 
