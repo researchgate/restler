@@ -1,7 +1,9 @@
 package net.researchgate.restler.service.dao;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import dev.morphia.Datastore;
 import dev.morphia.query.updates.UpdateOperator;
 import dev.morphia.query.updates.UpdateOperators;
 import net.researchgate.restdsl.dao.MongoServiceDao;
@@ -9,7 +11,6 @@ import net.researchgate.restdsl.exceptions.RestDslException;
 import net.researchgate.restdsl.queries.ServiceQuery;
 import net.researchgate.restler.domain.Account;
 import org.bson.types.ObjectId;
-import dev.morphia.Datastore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +52,7 @@ public class AccountDao extends MongoServiceDao<Account, ObjectId> {
     }
 
     public Account changeAccountMentor(ServiceQuery<ObjectId> q, ObjectId mentorId) throws RestDslException {
-        return findAndModify(q, List.of(UpdateOperators.set("mentorAccountId", mentorId)));
+        return findAndModify(q, Lists.newArrayList(UpdateOperators.set("mentorAccountId", mentorId)));
     }
 
 }
