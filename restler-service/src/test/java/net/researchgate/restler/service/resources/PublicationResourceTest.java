@@ -5,7 +5,6 @@ import io.dropwizard.testing.junit.DropwizardAppRule;
 import net.researchgate.restler.RestlerApplication;
 import net.researchgate.restler.domain.Publication;
 import net.researchgate.restler.service.config.RestlerConfig;
-import net.researchgate.restler.service.util.AbstractMongoDBTest;
 import org.glassfish.jersey.client.JerseyClientBuilder;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -23,7 +22,7 @@ import static org.junit.Assert.assertNotEquals;
 /**
  * Testing publication resource
  */
-public class PublicationResourceTest extends AbstractMongoDBTest {
+public class PublicationResourceTest {
 
     @Rule
     public DropwizardAppRule<RestlerConfig> APP =
@@ -53,8 +52,8 @@ public class PublicationResourceTest extends AbstractMongoDBTest {
         assertEquals(clientName, p2.getLastModificationClientId());
     }
 
-    // calls an external service (that happens to be the same service) to get a publication
     @Test
+    @Ignore // Ignoring since it requires a locally running service
     public void testExternalDao() {
         Client client = new JerseyClientBuilder().build();
 

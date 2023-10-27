@@ -3,17 +3,19 @@ package net.researchgate.restdsl.types;
 import com.google.common.base.Converter;
 import com.google.common.base.Enums;
 import com.google.common.base.Splitter;
+import dev.morphia.Datastore;
+import dev.morphia.mapping.Mapper;
+import dev.morphia.mapping.codec.pojo.EntityModel;
+import dev.morphia.mapping.codec.pojo.PropertyModel;
+import net.researchgate.restdsl.dao.EntityFieldMapper;
 import net.researchgate.restdsl.exceptions.RestDslException;
 import net.researchgate.restdsl.queries.ServiceQueryReservedValue;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.types.ObjectId;
-import dev.morphia.Morphia;
-import dev.morphia.mapping.MappedClass;
-import dev.morphia.mapping.MappedField;
-import dev.morphia.mapping.Mapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.client.Entity;
 import java.lang.reflect.Type;
 import java.util.Date;
 import java.util.HashMap;
@@ -25,8 +27,6 @@ import java.util.Map;
  */
 public class TypeInfoUtil {
     private static final Logger LOGGER = LoggerFactory.getLogger(TypeInfoUtil.class);
-
-    public static final Mapper MAPPER = new Morphia().getMapper();
 
     private static Map<Class, TypeConverter<?>> converters = new HashMap<>();
 
@@ -42,7 +42,7 @@ public class TypeInfoUtil {
     //TODO: converters via annotations
     @SuppressWarnings("unchecked")
     // fieldName and parentClazz are needed for potential reflection to get serde info from a field
-    public static <K> K getValue(String strVal, String fieldName, Class<K> clazz, Class<?> parentClazz) throws RestDslException {
+    public static <K> K getValue(String strVal, Class<K> clazz) throws RestDslException {
         try {
             ServiceQueryReservedValue reservedValue = ServiceQueryReservedValue.fromString(strVal);
             if (reservedValue != null) {
@@ -80,29 +80,25 @@ public class TypeInfoUtil {
 
 
     //TODO: get rid of Pair
-    public static Pair<Class<?>, Class<?>> getFieldExpressionClazz(Class<?> cl, String fieldExpression) throws RestDslException {
-        return getFieldExpressionClazz(cl, null, fieldExpression, Splitter.on('.').splitToList(fieldExpression), 0);
+    public static Pair<Class<?>, Class<?>> getFieldExpressionClazz(EntityFieldMapper mapper, Class<?> cl, String fieldExpression) throws RestDslException {
+        return getFieldExpressionClazz(mapper, cl, null, fieldExpression, Splitter.on('.').splitToList(fieldExpression), 0);
     }
 
-    private static Pair<Class<?>, Class<?>> getFieldExpressionClazz(Class<?> cl, Class<?> prevClazz, String fieldExpression, List<String> fields, int ptr) throws RestDslException {
+    private static Pair<Class<?>, Class<?>> getFieldExpressionClazz(EntityFieldMapper mapper, Class<?> cl, Class<?> prevClazz, String fieldExpression, List<String> fields, int ptr) throws RestDslException {
         if (ptr >= fields.size()) {
             return Pair.of(cl, prevClazz);
         }
         String fieldName = fields.get(ptr);
 
+
         //TODO: cache mapped info
-        MappedClass mc = MAPPER.getMappedClass(cl);
-        MappedField nestedField = mc.getMappedFieldByJavaField(fieldName);
-        if (nestedField == null) {
-            throw new RestDslException("Cannot find field " + fieldExpression, RestDslException.Type.PARAMS_ERROR);
-        }
-        Class<?> nestedClazz = nestedField.getType();
+        Class<?> nestedClazz =  mapper.getFieldType(cl, fieldName);
         //TODO: better type checking
         if (nestedClazz.isAssignableFrom(List.class)) {
-            Type subType = nestedField.getSubType();
-            return getFieldExpressionClazz((Class<?>) subType, cl, fieldExpression, fields, ptr + 1);
+            Type subType = mapper.getNormalizedType(cl, fieldName);
+            return getFieldExpressionClazz(mapper, (Class<?>) subType, cl, fieldExpression, fields, ptr + 1);
         } else {
-            return getFieldExpressionClazz(nestedClazz, cl, fieldExpression, fields, ptr + 1);
+            return getFieldExpressionClazz(mapper, nestedClazz, cl, fieldExpression, fields, ptr + 1);
         }
     }
 }

@@ -41,7 +41,7 @@ public abstract class ServiceModel<V, K> extends BaseServiceModel<V, K> {
 
 
     public V patch(V entity, PatchContext patchContext) throws RestDslException {
-        K idField = EntityInfo.get((Class<V>) entity.getClass()).getIdFieldValue(entity);
+        K idField = (K) serviceDao.getEntityMapper().getIdValue(entity.getClass(), entity);
 
         ServiceQuery<K> q = ServiceQuery.byId(idField);
         V oldBean = getOne(idField);

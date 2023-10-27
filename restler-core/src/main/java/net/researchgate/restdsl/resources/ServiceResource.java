@@ -64,7 +64,6 @@ public abstract class ServiceResource<V, K> extends BaseServiceResource<V, K> {
         }
         validatePut(key, entity);
 
-        entityInfo.setIdFieldValue(entity, key);
         V persisted = serviceModel.save(entity);
         return Response.status(OK).entity(persisted).build();
     }

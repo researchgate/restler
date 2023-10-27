@@ -4,6 +4,8 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import dev.morphia.mapping.Mapper;
+import net.researchgate.restdsl.dao.EntityFieldMapper;
 import net.researchgate.restdsl.domain.EntityInfo;
 import net.researchgate.restdsl.exceptions.RestDslException;
 import net.researchgate.restdsl.queries.PatchContext;
@@ -77,7 +79,7 @@ public class RequestUtil {
 
     }
 
-    public static <K, V> ServiceQuery<K> parseRequest(Class<V> entityClazz, Class<K> idClazz, PathSegment segment, UriInfo uriInfo, ServiceQueryParams defaultParams) throws RestDslException {
+    public static <K, V> ServiceQuery<K> parseRequest(Class<V> entityClazz, Class<K> idClazz, PathSegment segment, UriInfo uriInfo, ServiceQueryParams defaultParams, EntityFieldMapper mapper) throws RestDslException {
         ServiceQuery.ServiceQueryBuilder<K> builder = ServiceQuery.builder();
 
         builder.offset(getInt("offset", uriInfo));
@@ -102,20 +104,19 @@ public class RequestUtil {
                 ServiceQueryUtil.ParsedQueryField parsedQueryField = ServiceQueryUtil.parseQueryField(fieldNameWithCriteria);
                 String fieldNameWithoutConditions = parsedQueryField.getFieldName();
                 Pair<Class<?>, Class<?>> pairOfFieldClazzAndParentClazz =
-                        TypeInfoUtil.getFieldExpressionClazz(entityClazz, fieldNameWithoutConditions);
+                        TypeInfoUtil.getFieldExpressionClazz(mapper, entityClazz, fieldNameWithoutConditions);
 
                 Class<?> fieldClazz = pairOfFieldClazzAndParentClazz.getLeft();
-                Class<?> parentClazz = pairOfFieldClazzAndParentClazz.getRight();
 
                 List<Object> criteriaList = Lists.newArrayList(Iterables.transform(splitValues,
-                        input -> TypeInfoUtil.getValue(input, fieldNameWithoutConditions, fieldClazz, parentClazz)));
+                        input -> TypeInfoUtil.getValue(input, fieldClazz)));
 
                 builder.withCriteria(parsedQueryField.getFullCriteria(), criteriaList);
             }
         }
         if (!StringUtils.isEmpty(segment.getPath()) && !segment.getPath().startsWith("-")) {
             builder.ids(Lists.transform(Splitter.on(',').splitToList(segment.getPath()),
-                    input -> TypeInfoUtil.getValue(input, EntityInfo.get(entityClazz).getIdFieldName(), idClazz, entityClazz)));
+                    input -> TypeInfoUtil.getValue(input, idClazz)));
         }
 
         return builder.build();

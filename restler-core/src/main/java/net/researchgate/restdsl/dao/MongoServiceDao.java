@@ -1,20 +1,25 @@
 package net.researchgate.restdsl.dao;
 
+import com.google.common.collect.Lists;
 import com.mongodb.DuplicateKeyException;
+import com.mongodb.client.model.ReturnDocument;
+import com.mongodb.client.result.UpdateResult;
+import dev.morphia.Datastore;
+import dev.morphia.DeleteOptions;
+import dev.morphia.ModifyOptions;
+import dev.morphia.UpdateOptions;
+import dev.morphia.query.Query;
+import dev.morphia.query.updates.UpdateOperator;
+import dev.morphia.query.updates.UpdateOperators;
 import net.researchgate.restdsl.exceptions.RestDslException;
 import net.researchgate.restdsl.metrics.NoOpStatsReporter;
 import net.researchgate.restdsl.metrics.StatsReporter;
 import net.researchgate.restdsl.queries.ServiceQuery;
 import org.apache.commons.collections.CollectionUtils;
-import dev.morphia.Datastore;
-import dev.morphia.FindAndModifyOptions;
-import dev.morphia.dao.BasicDAO;
-import dev.morphia.query.Query;
-import dev.morphia.query.UpdateOperations;
-import dev.morphia.query.UpdateResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -55,14 +60,15 @@ public class MongoServiceDao<V, K> extends MongoBaseServiceDao<V, K> implements 
             throw new RestDslException("Deletion query should either provide ids or criteria", RestDslException.Type.QUERY_ERROR);
         }
         preDelete(serviceQuery);
-        return morphiaDao.deleteByQuery(convertToMorphiaQuery(serviceQuery, false)).getN();
+        Query<V> query = convertToMorphiaQuery(serviceQuery);
+        return Math.toIntExact(query.delete(new DeleteOptions()).getDeletedCount());
     }
 
     @Override
     public V save(V entity) {
         prePersist(entity);
         try {
-            morphiaDao.save(entity);
+            datastore.save(entity);
         } catch (DuplicateKeyException e) {
             throw new RestDslException("Duplicate mongo key: " + e.getMessage(), RestDslException.Type.DUPLICATE_KEY);
         }
@@ -71,60 +77,51 @@ public class MongoServiceDao<V, K> extends MongoBaseServiceDao<V, K> implements 
 
     @Override
     public V patch(ServiceQuery<K> q, Map<String, Object> patchedFields) throws RestDslException {
-        UpdateOperations<V> ops = createUpdateOperations();
+        List<UpdateOperator> ops = Lists.newArrayList();
         for (Map.Entry<String, Object> e : patchedFields.entrySet()) {
             String key = e.getKey();
             Object value = e.getValue();
             if (value != null) {
-                ops.set(key, value);
+                ops.add(UpdateOperators.set(key, value));
             } else {
-                ops.unset(key);
+                ops.add(UpdateOperators.unset(key));
             }
         }
-
         return findAndModify(q, ops);
     }
 
-    protected UpdateResults update(ServiceQuery<K> q, UpdateOperations<V> updateOperations) throws RestDslException {
+    protected UpdateResult update(ServiceQuery<K> q, List<UpdateOperator> updateOperations) throws RestDslException {
         preUpdate(q, updateOperations);
-        return morphiaDao.update(convertToMorphiaQuery(q, false), updateOperations);
+        Query<V> morphiaQuery = convertToMorphiaQuery(q);
+        return morphiaQuery.update(new UpdateOptions().multi(true), updateOperations.toArray(new UpdateOperator[0]));
     }
 
-    protected V findAndModify(ServiceQuery<K> q, UpdateOperations<V> updateOperations) throws RestDslException {
-        FindAndModifyOptions options = new FindAndModifyOptions()
-                .returnNew(true)
+    protected V findAndModify(ServiceQuery<K> q, List<UpdateOperator> updateOperations) throws RestDslException {
+        ModifyOptions options = new ModifyOptions()
+                .returnDocument(ReturnDocument.AFTER)
                 .upsert(false);
 
         return findAndModify(q, updateOperations, options);
     }
 
     @Deprecated
-    protected V findAndModify(ServiceQuery<K> q, UpdateOperations<V> updateOperations, boolean oldVersion, boolean createIfMissing) throws RestDslException {
-        FindAndModifyOptions options = new FindAndModifyOptions()
-                .returnNew(!oldVersion)
+    protected V findAndModify(ServiceQuery<K> q, List<UpdateOperator> updateOperations, boolean oldVersion, boolean createIfMissing) throws RestDslException {
+        ModifyOptions options = new ModifyOptions()
+                .returnDocument(oldVersion ? ReturnDocument.BEFORE : ReturnDocument.AFTER)
                 .upsert(createIfMissing);
 
         return findAndModify(q, updateOperations, options);
     }
 
-    protected V findAndModify(ServiceQuery<K> q, UpdateOperations<V> updateOperations, FindAndModifyOptions options) throws RestDslException {
+    protected V findAndModify(ServiceQuery<K> q, List<UpdateOperator> updateOperations, ModifyOptions options) throws RestDslException {
         preUpdate(q, updateOperations);
-        Query<V> morphiaQuery = convertToMorphiaQuery(q, false);
+        Query<V> morphiaQuery = convertToMorphiaQuery(q);
+
         try {
-            return morphiaDao.getDatastore().findAndModify(morphiaQuery, updateOperations, options);
+            return morphiaQuery.modify(options, updateOperations.toArray(new UpdateOperator[0]));
         } catch (DuplicateKeyException e) {
             throw new RestDslException("Duplicate mongo key: " + e.getMessage(), RestDslException.Type.DUPLICATE_KEY);
         }
-    }
-
-    /**
-     * Use when you need to bypass restDsl, for example  internal operations
-     *
-     * @return morphia's dao
-     * @deprecated Use {@link MongoBaseServiceDao#morphiaDao} instead, as it not unsafe to use morphia. This method will be removed soon because its public!
-     */
-    public BasicDAO<V, K> getMorphiaDaoUnsafe() {
-        return morphiaDao;
     }
 
     @Override
@@ -133,7 +130,7 @@ public class MongoServiceDao<V, K> extends MongoBaseServiceDao<V, K> implements 
     }
 
     @Override
-    public void preUpdate(ServiceQuery<K> q, UpdateOperations<V> updateOperations) {
+    public void preUpdate(ServiceQuery<K> q, List<UpdateOperator> updateOperations) {
         // no op
     }
 

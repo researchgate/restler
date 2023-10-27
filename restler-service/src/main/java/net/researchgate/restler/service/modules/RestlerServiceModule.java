@@ -1,12 +1,12 @@
 package net.researchgate.restler.service.modules;
 
 import com.codahale.metrics.MetricRegistry;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Binder;
 import com.google.inject.Provides;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.hubspot.dropwizard.guicier.DropwizardAwareModule;
+import com.mongodb.client.MongoClient;
 import net.researchgate.restler.service.config.RestlerConfig;
 import net.researchgate.restler.service.dao.AccountDao;
 import net.researchgate.restler.service.dao.ExternalPublicationDao;
@@ -34,9 +34,10 @@ public class RestlerServiceModule extends DropwizardAwareModule<RestlerConfig> {
         binder.bind(MetricRegistry.class).toInstance(getEnvironment().metrics());
         bindExternalPublicationUrl(binder);
 
-        MongoClientBuilder mongoConfig = getConfiguration().mongoConfig;
-        binder.install(new MongoModule(mongoConfig.build(getEnvironment()), mongoConfig.getDbName()));
 
+        if (getConfiguration().mongoConfig != null) {
+            configureMongo(binder, getConfiguration().mongoConfig);
+        }
         binder.bind(ServiceExceptionMapper.class);
 
         binder.bind(AccountDao.class);
@@ -52,9 +53,8 @@ public class RestlerServiceModule extends DropwizardAwareModule<RestlerConfig> {
         binder.bind(PublicationResource.class);
     }
 
-    @Provides
-    ObjectMapper provideObjectMapper() {
-        return getEnvironment().getObjectMapper();
+    protected void configureMongo(Binder binder, MongoClientBuilder mongoConfig) {
+        binder.install(new MongoModule(mongoConfig.build(getEnvironment()), mongoConfig.getDbName()));
     }
 
     @Provides

@@ -21,4 +21,7 @@ public interface ServiceDao<V, K> {
     void validateQuery(ServiceQuery<K> query) throws RestDslException;
 
     ServiceQueryInfo<K> getServiceQueryInfo(ServiceQuery<K> serviceQuery);
+
+    EntityFieldMapper getEntityMapper();
+
 }

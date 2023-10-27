@@ -15,10 +15,10 @@ public class TypeInfoUtilTest {
 
     @Test
     public void testSimple() {
-        assertEquals(123L, (Object) TypeInfoUtil.getValue("123", "id", Long.class, Account.class));
+        assertEquals(123L, (Object) TypeInfoUtil.getValue("123", Long.class));
 
         try {
-            TypeInfoUtil.getValue("123X", "id", Long.class, Account.class);
+            TypeInfoUtil.getValue("123X", Long.class);
             fail();
         } catch (RestDslException e) {
             assertEquals(RestDslException.Type.PARAMS_ERROR, e.getType());

@@ -3,7 +3,7 @@ package net.researchgate.restdsl;
 import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Id;
 
-@Entity(value = "entity", noClassnameStored = true)
+@Entity(value = "entity", useDiscriminator = false)
 public class TestEntity {
     @Id
     Long id;

@@ -1,10 +1,13 @@
 package net.researchgate.restler.domain;
 
+import dev.morphia.annotations.Entity;
+
 import java.util.List;
 
 /**
  * Account stats
  */
+@Entity
 public class AccountStats {
     private Integer publicationCnt;
     private Integer followerCnt;

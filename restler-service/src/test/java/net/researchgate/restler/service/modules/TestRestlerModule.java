@@ -2,6 +2,9 @@ package net.researchgate.restler.service.modules;
 
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.Binder;
+import com.mongodb.client.MongoClient;
+import dev.morphia.Datastore;
 import io.dropwizard.configuration.ConfigurationFactory;
 import io.dropwizard.configuration.DefaultConfigurationFactoryFactory;
 import io.dropwizard.configuration.FileConfigurationSourceProvider;
@@ -9,6 +12,9 @@ import io.dropwizard.jackson.Jackson;
 import io.dropwizard.setup.Environment;
 import io.dropwizard.validation.valuehandling.OptionalValidatedValueUnwrapper;
 import net.researchgate.restler.service.config.RestlerConfig;
+import net.researchgate.restler.service.mongo.MongoClientBuilder;
+import net.researchgate.restler.service.mongo.MongoModule;
+import net.researchgate.restler.service.util.MongoDContainerRule;
 import org.hibernate.validator.HibernateValidator;
 
 import javax.validation.Validation;
@@ -19,6 +25,16 @@ import javax.validation.ValidatorFactory;
  */
 public class TestRestlerModule extends RestlerServiceModule  {
     private static final String TEST_CONFIG_FILE = "src/test/resources/config.yaml";
+    private final MongoDContainerRule mongodb;
+
+    public TestRestlerModule(MongoDContainerRule mongodb) {
+        this.mongodb = mongodb;
+    }
+
+    @Override
+    protected void configureMongo(Binder binder, MongoClientBuilder mongoConfig) {
+        binder.install(new MongoModule(mongodb.client(), mongoConfig.getDbName()));
+    }
 
     @Override
     protected Environment getEnvironment() {
