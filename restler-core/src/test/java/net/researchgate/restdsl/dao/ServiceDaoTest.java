@@ -5,6 +5,7 @@ import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
+import com.mongodb.client.model.IndexOptions;
 import dev.morphia.Datastore;
 import dev.morphia.Morphia;
 import net.researchgate.restdsl.TestEntity;
@@ -12,6 +13,7 @@ import net.researchgate.restdsl.exceptions.RestDslException;
 import net.researchgate.restdsl.metrics.NoOpStatsReporter;
 import net.researchgate.restdsl.metrics.StatsReporter;
 import net.researchgate.restdsl.queries.ServiceQuery;
+import org.bson.Document;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -19,6 +21,7 @@ import org.junit.Test;
 import org.testcontainers.containers.GenericContainer;
 
 import static net.researchgate.restdsl.exceptions.RestDslException.Type.QUERY_ERROR;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.fail;
 
 public class ServiceDaoTest {
@@ -33,9 +36,6 @@ public class ServiceDaoTest {
         mongoDBContainer.start();
 
         ConnectionString uri = new ConnectionString("mongodb://" + mongoDBContainer.getHost() + ":" + mongoDBContainer.getMappedPort(27017));
-        System.setProperty("dw.mongoConfig.uri", uri.toString());
-        System.setProperty("dw.mongoConfig.tls", "false");
-        System.setProperty("dw.mongoConfig.dbName", "testDatabase");
         MongoClientSettings clientSettings = MongoClientSettings.builder()
                 .applyConnectionString(uri)
                 .build();
@@ -93,6 +93,16 @@ public class ServiceDaoTest {
         dao.setAllowGroupBy();
         Assert.assertTrue(dao.allowGroupBy);
         dao.get(q);
+    }
+
+    @Test
+    public void testDuplicateKey_throws() {
+        fakedDatastore.getCollection(TestEntity.class)
+                .createIndex(new Document("value", 1), new IndexOptions().unique(true));
+        final TestServiceDao dao = new TestServiceDao(fakedDatastore, TestEntity.class);
+
+        dao.save(new TestEntity(2L, "nonUniqueValue"));
+        assertThrows(RestDslException.class, () -> dao.save(new TestEntity(3L, "nonUniqueValue")));
     }
 
     static class TestServiceDao extends MongoServiceDao<TestEntity, Long> {

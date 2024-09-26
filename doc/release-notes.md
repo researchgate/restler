@@ -1,5 +1,8 @@
 # Changelog
 
+### 6.0.1
+* Restored error handling for duplicate key exceptions
+
 ### 6.0.0
 * Backwards incompatible changes: 
   * Upgraded to mongodb-driver-sync 4.10.2 and morphia 2.4.4
