@@ -2,6 +2,11 @@ package net.researchgate.restdsl.dao;
 
 import com.google.common.collect.Lists;
 import com.mongodb.DuplicateKeyException;
+import com.mongodb.ErrorCategory;
+import com.mongodb.MongoBulkWriteException;
+import com.mongodb.MongoException;
+import com.mongodb.MongoWriteException;
+import com.mongodb.WriteError;
 import com.mongodb.client.model.ReturnDocument;
 import com.mongodb.client.result.UpdateResult;
 import dev.morphia.Datastore;
@@ -69,8 +74,8 @@ public class MongoServiceDao<V, K> extends MongoBaseServiceDao<V, K> implements 
         prePersist(entity);
         try {
             datastore.save(entity);
-        } catch (DuplicateKeyException e) {
-            throw new RestDslException("Duplicate mongo key: " + e.getMessage(), RestDslException.Type.DUPLICATE_KEY);
+        } catch (DuplicateKeyException|MongoWriteException|MongoBulkWriteException e) {
+            throw mapMongoExceptions(e);
         }
         return entity;
     }
@@ -119,8 +124,20 @@ public class MongoServiceDao<V, K> extends MongoBaseServiceDao<V, K> implements 
 
         try {
             return morphiaQuery.modify(options, updateOperations.toArray(new UpdateOperator[0]));
-        } catch (DuplicateKeyException e) {
-            throw new RestDslException("Duplicate mongo key: " + e.getMessage(), RestDslException.Type.DUPLICATE_KEY);
+        } catch (DuplicateKeyException|MongoWriteException|MongoBulkWriteException e) {
+            throw mapMongoExceptions(e);
+        }
+    }
+
+    protected RuntimeException mapMongoExceptions(MongoException e) {
+        if (e instanceof DuplicateKeyException) {
+            return new RestDslException("Duplicate mongo key: " + e.getMessage(), RestDslException.Type.DUPLICATE_KEY);
+        } else if (e instanceof MongoWriteException && (ErrorCategory.DUPLICATE_KEY == ((MongoWriteException) e).getError().getCategory())) {
+            return new RestDslException("Duplicate mongo key: " + e.getMessage(), RestDslException.Type.DUPLICATE_KEY);
+        } else if (e instanceof MongoBulkWriteException && ((MongoBulkWriteException) e).getWriteErrors().stream().map(WriteError::getCategory).anyMatch(cat -> ErrorCategory.DUPLICATE_KEY == cat)) {
+            return new RestDslException("Duplicate mongo key: " + e.getMessage(), RestDslException.Type.DUPLICATE_KEY);
+        } else {
+            return new RuntimeException(e);
         }
     }
 
