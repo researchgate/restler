@@ -2,6 +2,11 @@ package net.researchgate.restdsl.metrics;
 
 import java.io.Closeable;
 
+/**
+ * @deprecated replaced by {@link MetricSinkTimingWrapper}
+ */
+@SuppressWarnings("removal")
+@Deprecated(since = "6.1.0", forRemoval = true)
 public class StatsTimingWrapper implements Closeable {
     private final StatsReporter statsReporter;
     private final String key;

@@ -14,9 +14,10 @@ import dev.morphia.query.filters.Filter;
 import net.researchgate.restdsl.domain.EntityIndexInfo;
 import net.researchgate.restdsl.domain.EntityInfo;
 import net.researchgate.restdsl.exceptions.RestDslException;
-import net.researchgate.restdsl.metrics.NoOpStatsReporter;
-import net.researchgate.restdsl.metrics.StatsReporter;
-import net.researchgate.restdsl.metrics.StatsTimingWrapper;
+import net.researchgate.restdsl.metrics.MetricName;
+import net.researchgate.restdsl.metrics.MetricSink;
+import net.researchgate.restdsl.metrics.MetricSinkTimingWrapper;
+import net.researchgate.restdsl.metrics.NoOpMetricSink;
 import net.researchgate.restdsl.queries.ServiceQuery;
 import net.researchgate.restdsl.queries.ServiceQueryInfo;
 import net.researchgate.restdsl.queries.ServiceQueryReservedValue;
@@ -63,14 +64,14 @@ import static dev.morphia.query.filters.Filters.nin;
  * @param <K> Type of the entity's id field
  */
 public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
+    public static final String SERVICE_QUERY_METRIC = "service_query";
     private static final Logger LOGGER = LoggerFactory.getLogger(MongoBaseServiceDao.class);
 
-    private static final String QUERY_KEY = "queries.shapes.%s.%%H";
     protected final String collectionName;
     protected final Class<V> entityClazz;
     protected final EntityInfo<V> entityInfo;
     protected final EntityIndexInfo<V> entityIndexInfo;
-    protected final StatsReporter statsReporter;
+    protected final MetricSink metricSink;
 
     // group by operations may require a lot of requests to the database. We should have to explicitly enable it
     protected boolean allowGroupBy = false;
@@ -79,18 +80,32 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
     private final EntityFieldMapper entityMapper;
 
     public MongoBaseServiceDao(Datastore datastore, Class<V> entityClazz) {
-        this(datastore, entityClazz, NoOpStatsReporter.INSTANCE);
+        this(datastore, entityClazz, NoOpMetricSink.INSTANCE);
     }
-    //TODO: provide implementations for StatsReporter in example service
-    public MongoBaseServiceDao(Datastore datastore, Class<V> entityClazz, StatsReporter statsReporter) {
 
+    /**
+     * Creates a new DAO.
+     *
+     * @param datastore Morphia datastore to query and update
+     * @param entityClazz Class of objects to bind MongoDB documents to
+     * @param statsReporter Instrumentation to collect query durations
+     *
+     * @deprecated use {@link #MongoBaseServiceDao(Datastore, Class, MetricSink)}
+     */
+    @Deprecated
+    @SuppressWarnings("removal")
+    public MongoBaseServiceDao(Datastore datastore, Class<V> entityClazz, net.researchgate.restdsl.metrics.StatsReporter statsReporter) {
+        this(datastore, entityClazz, new net.researchgate.restdsl.metrics.MetricSinkStatsReporterAdaptor(statsReporter));
+    }
+
+    public MongoBaseServiceDao(Datastore datastore, Class<V> entityClazz, MetricSink metricSink) {
         this.datastore = datastore;
         this.collectionName = datastore.getMapper().getEntityModel(entityClazz).getCollectionName();
         this.entityClazz = entityClazz;
         this.entityMapper = new MongoEntityFieldMapper(datastore);
         this.entityInfo = EntityInfo.get(entityMapper, entityClazz);
         this.entityIndexInfo = new EntityIndexInfo<>(datastore, entityClazz, datastore.getCollection(entityClazz).listIndexes());
-        this.statsReporter = statsReporter;
+        this.metricSink = metricSink;
         validateMorphiaAnnotations(entityClazz, new HashSet<>());
     }
 
@@ -168,7 +183,7 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
         Query<V> morphiaQuery = convertToMorphiaQuery(serviceQuery);
         FindOptions findOptions = toFindOptions(serviceQuery);
 
-        try (StatsTimingWrapper ignored = getQueryShapeWrapper(serviceQuery)) {
+        try (MetricSinkTimingWrapper ignored = getQueryShapeWrapper(serviceQuery)) {
             String groupBy = serviceQuery.getGroupBy();
             if (groupBy == null) {
                 List<V> results = Collections.emptyList();
@@ -391,8 +406,15 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
     }
 
     // PRIVATE
-    private StatsTimingWrapper getQueryShapeWrapper(ServiceQuery<K> serviceQuery) {
-        return StatsTimingWrapper.of(statsReporter, String.format(QUERY_KEY, collectionName + "." + serviceQuery.getQueryShape()));
+    private MetricSinkTimingWrapper getQueryShapeWrapper(ServiceQuery<K> serviceQuery) {
+        MetricName name = new MetricName(
+                SERVICE_QUERY_METRIC,
+                Map.of(
+                        "collectionName", collectionName,
+                        "queryShape", serviceQuery.getQueryShape()
+                )
+        );
+        return MetricSinkTimingWrapper.of(metricSink, name);
     }
 
 
