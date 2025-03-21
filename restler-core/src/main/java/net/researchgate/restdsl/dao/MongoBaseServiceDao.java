@@ -8,6 +8,7 @@ import com.google.common.collect.Sets;
 import dev.morphia.Datastore;
 import dev.morphia.DeleteOptions;
 import dev.morphia.query.FindOptions;
+import dev.morphia.query.MorphiaCursor;
 import dev.morphia.query.Query;
 import dev.morphia.query.Sort;
 import dev.morphia.query.filters.Filter;
@@ -189,7 +190,9 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
                 List<V> results = Collections.emptyList();
                 if (!serviceQuery.getCountOnly()) {
                     LOGGER.debug("Executing query {}", morphiaQuery);
-                    results = morphiaQuery.iterator(findOptions).toList();
+                    try (MorphiaCursor<V> iterator = morphiaQuery.iterator(findOptions)) {
+                        results = iterator.toList();
+                    }
                 }
                 return new EntityResult<>(results, getTotalItemsCnt(morphiaQuery, serviceQuery, results));
             } else {
@@ -207,7 +210,9 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
                     List<V> resultPerKey = Collections.emptyList();
                     if (!serviceQuery.getCountOnly()) {
                         LOGGER.debug("Executing query {}", q);
-                        resultPerKey = q.iterator(findOptions).toList();
+                        try (MorphiaCursor<V> iterator = q.iterator(findOptions)) {
+                            resultPerKey = iterator.toList();
+                        }
                     }
 
                     EntityList<V> entityList = new EntityList<>(resultPerKey, getTotalItemsCnt(q, serviceQuery, resultPerKey));
