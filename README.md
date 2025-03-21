@@ -226,8 +226,9 @@ where `fieldName` is a field name from your entity.
 
 * `IDS` means that a primary key (_id) were provided into the query
 * `CRITERIA` tells that filtering was made on those additional fields
+* `SYNCMATCH` additional filtering of array elements using $elemMatch
 * `ORDER` – sorting was done on a particular field 
-* `GROUPBY` returned results will be grouped together by the field provided& 
+* `GROUPBY` returned results will be grouped together by the field provided
 * `LIMIT` - a query contained a limit. Typically, when querying by a criteria a limit should be provided.
 
 #### Examples
