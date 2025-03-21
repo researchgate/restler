@@ -54,12 +54,12 @@ import static dev.morphia.query.filters.Filters.nin;
 /**
  * This Dao implements common access to the underlying mongo collection.
  * Use this dao if you want to make sure that your data is only written to in a controlled way.
- *
- * Supported operations
- * - get by restler dsl
- * - delete by id
- *
- * If you want to simply expose CRUD via REST, use a {@link MongoServiceDao}.
+ * <p>Supported operations</p>
+ * <ul>
+ *     <li>get by restler dsl</li>
+ *     <li>delete by id</li>
+ *</ul>
+ * <p>If you want to simply expose CRUD via REST, use a {@link MongoServiceDao}.</p>
  *
  * @param <V> Type of the entity
  * @param <K> Type of the entity's id field
@@ -80,6 +80,7 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
     protected final Datastore datastore;
     private final EntityFieldMapper entityMapper;
 
+    @SuppressWarnings("unused")
     public MongoBaseServiceDao(Datastore datastore, Class<V> entityClazz) {
         this(datastore, entityClazz, NoOpMetricSink.INSTANCE);
     }
@@ -116,9 +117,8 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
     }
 
     /**
-     * explicitly allow groupBy in get queries.
-     *
-     * If not, we will throw a RestDsl exception when the client queries with a groupBy.
+     * Explicitly allow groupBy in get queries. If not, we will throw a RestDsl exception when the client queries with
+     * a groupBy.
      */
     protected void setAllowGroupBy() {
         this.allowGroupBy = true;
@@ -351,12 +351,12 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
         }
 
         // if getLimit == 0 then we need to count anyway
-        if (results.size() == 0 && serviceQuery.getOffset() == 0 && serviceQuery.getLimit() > 0) {
+        if (results.isEmpty() && serviceQuery.getOffset() == 0 && serviceQuery.getLimit() > 0) {
             return 0L;
         }
 
         // if size is equal 0 it could be that offset is too big, or we just have 0 elements in total - must count
-        if (results.size() != 0 && results.size() < serviceQuery.getLimit()) {
+        if (!results.isEmpty() && results.size() < serviceQuery.getLimit()) {
             return (long) (serviceQuery.getOffset() + results.size());
         } else {
             return q.count();
@@ -379,7 +379,7 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
             throw new RestDslException("Query limit must be positive", RestDslException.Type.QUERY_ERROR);
         }
 
-        // for primary keys it could also works, but it does not make sense to group on them since they are unique
+        // for primary keys it could also work, but it does not make sense to group on them since they are unique
         if (serviceQuery.getGroupBy() != null &&
                 (serviceQuery.getCriteria() == null || !serviceQuery.getCriteria().containsKey(serviceQuery.getGroupBy()))) {
             throw new RestDslException("When provided, groupBy parameter should be contained in query criteria",
@@ -425,7 +425,7 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
 
     // TODO Remove this after the morphia migration.
     // This method checks, that there are no old 'org.mongodb.morphia' annotations present on the morphia managed entities.
-    private void validateMorphiaAnnotations(Class<?> klass, Set<Class> seen) {
+    private void validateMorphiaAnnotations(Class<?> klass, Set<Class<?>> seen) {
         if (!seen.add(klass)) { // break circular deps
             return;
         }
