@@ -65,7 +65,7 @@ import static dev.morphia.query.filters.Filters.nin;
  * @param <K> Type of the entity's id field
  */
 public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
-    public static final String SERVICE_QUERY_METRIC = "service_query";
+    public static final String MONGO_SERVICE_QUERY_METRIC = "mongo_service_query";
     private static final Logger LOGGER = LoggerFactory.getLogger(MongoBaseServiceDao.class);
 
     protected final String collectionName;
@@ -413,7 +413,7 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
     // PRIVATE
     private MetricSinkTimingWrapper getQueryShapeWrapper(ServiceQuery<K> serviceQuery) {
         MetricName name = new MetricName(
-                SERVICE_QUERY_METRIC,
+                MONGO_SERVICE_QUERY_METRIC,
                 Map.of(
                         "collectionName", collectionName,
                         "queryShape", serviceQuery.getQueryShape()

@@ -26,7 +26,7 @@ public class MetricSinkStatsReporterAdaptor implements MetricSink {
     }
 
     private String nameToKey(MetricName name) {
-        if (MongoBaseServiceDao.SERVICE_QUERY_METRIC.equals(name.getName())) {
+        if (MongoBaseServiceDao.MONGO_SERVICE_QUERY_METRIC.equals(name.getName())) {
             String collectionName = name.getLabels().get("collectionName");
             String shape = name.getLabels().get("queryShape");
             return String.format(QUERY_KEY, collectionName + "." + shape);
