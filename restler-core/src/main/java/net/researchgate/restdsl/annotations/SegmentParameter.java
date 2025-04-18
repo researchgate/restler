@@ -16,11 +16,11 @@ import java.lang.annotation.Target;
         in = ParameterIn.PATH,
         schema = @Schema(type = "string", example = "-"),
         description = "A rest-dsl query, See https://github.com/researchgate/restler#get",
-        required = true
+        required = false
 )
 public @interface SegmentParameter {
     String name() default "segment";
     String description() default "A rest-dsl query, See https://github.com/researchgate/restler#get";
     ParameterIn in() default ParameterIn.PATH;
-    boolean required() default true;
+    boolean required() default false;
 }
