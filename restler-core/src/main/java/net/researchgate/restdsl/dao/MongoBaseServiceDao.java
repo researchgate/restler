@@ -181,6 +181,10 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
                 if (!allowGroupBy) {
                     throw new RestDslException("GroupBy is not allowed by this dao, but request contains groupBy '" + groupBy + "'. GroupBy can be enabled in the Service", RestDslException.Type.QUERY_ERROR);
                 }
+
+                // perform count query before in-place query editing
+                Long totalItems = serviceQuery.isCountTotalItems() ? morphiaQuery.count() : null;
+
                 // warning: in-place criteria editing
                 Collection<Object> criteriaForGrouping = Lists.newArrayList(serviceQuery.getCriteria().get(groupBy));
 
@@ -198,7 +202,7 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
                     EntityList<V> entityList = new EntityList<>(resultPerKey, getTotalItemsCnt(q, serviceQuery, resultPerKey));
                     groupedResult.put(k, entityList);
                 }
-                return new EntityResult<>(new EntityMultimap<>(groupedResult, serviceQuery.isCountTotalItems() ? morphiaQuery.count() : null));
+                return new EntityResult<>(new EntityMultimap<>(groupedResult, totalItems));
             }
         }
     }
