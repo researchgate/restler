@@ -1,5 +1,8 @@
 # Changelog
 
+### 6.0.2
+* Fixed an issue with `totalItems` on `groupBy` queries returning incorrect results
+
 ### 6.0.1
 * Restored error handling for duplicate key exceptions
 

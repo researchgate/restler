@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -309,7 +310,8 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
             if (field.contains("<>")) {
                 filters.add(nin(ServiceQueryUtil.parseQueryField(field).getFieldName(), criteria.toArray(new Object[0])));
             } else {
-                filters.add(in(field, criteria));
+                // defensive copy here to avoid issues with groupBy
+                filters.add(in(field, new ArrayList<>(criteria)));
             }
         }
         return filters.toArray(new Filter[0]);

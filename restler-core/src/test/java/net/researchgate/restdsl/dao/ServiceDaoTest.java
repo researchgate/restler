@@ -8,11 +8,15 @@ import com.mongodb.client.MongoClients;
 import com.mongodb.client.model.IndexOptions;
 import dev.morphia.Datastore;
 import dev.morphia.Morphia;
+import net.researchgate.restdsl.GroupByEntity;
 import net.researchgate.restdsl.TestEntity;
 import net.researchgate.restdsl.exceptions.RestDslException;
 import net.researchgate.restdsl.metrics.NoOpStatsReporter;
 import net.researchgate.restdsl.metrics.StatsReporter;
 import net.researchgate.restdsl.queries.ServiceQuery;
+import net.researchgate.restdsl.results.EntityList;
+import net.researchgate.restdsl.results.EntityMultimap;
+import net.researchgate.restdsl.results.EntityResult;
 import org.bson.Document;
 import org.junit.After;
 import org.junit.Assert;
@@ -20,7 +24,19 @@ import org.junit.Before;
 import org.junit.Test;
 import org.testcontainers.containers.GenericContainer;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.Period;
+import java.time.ZoneOffset;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import static io.smallrye.common.constraint.Assert.assertNotNull;
+import static java.lang.String.format;
 import static net.researchgate.restdsl.exceptions.RestDslException.Type.QUERY_ERROR;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.fail;
 
@@ -48,6 +64,20 @@ public class ServiceDaoTest {
         // insert and remove an item in order to create indexes
         TestEntity dbEntity = dao.save(new TestEntity(1L, "test"));
         dao.delete(dbEntity.getId());
+
+        fakedDatastore.getCollection(GroupByEntity.class).createIndex(Document.parse("{ group: 1 }"));
+        final TestWithDateDao daoWithDate = new TestWithDateDao(fakedDatastore);
+        final Instant start = LocalDate.of(2025, 1, 1)
+                .atStartOfDay(ZoneOffset.UTC)
+                .toInstant();
+        for (int group = 1; group < 20; group++) {
+            for (int days = 0; days < group; days++) {
+                final Date date = Date.from(start.plus(Period.ofDays(days)));
+                final String groupString = format("test%02d", group);
+                final GroupByEntity entity = new GroupByEntity(null, groupString, date);
+                daoWithDate.save(entity);
+            }
+        }
     }
 
     @After
@@ -70,6 +100,78 @@ public class ServiceDaoTest {
     }
 
     @Test
+    public void testGroupBy_equals() {
+        final TestWithDateDao dao = new TestWithDateDao(fakedDatastore);
+
+        Assert.assertTrue(dao.allowGroupBy);
+
+        final List<String> expectedGroups = List.of("test02", "test03", "test04", "DOES_NOT_EXIST");
+        final ServiceQuery<Long> q = ServiceQuery.<Long>builder()
+                .withCriteria("group", expectedGroups)
+                .order("-date")
+                .groupBy("group")
+                .limit(3)
+                .build();
+        EntityResult<GroupByEntity> result = dao.get(q);
+        EntityMultimap<GroupByEntity> multimap = result.getMultimap();
+
+        assertEquals(Set.copyOf(expectedGroups), multimap.getItems().keySet());
+
+        EntityList<GroupByEntity> group02 = multimap.getItems().get("test02");
+        assertNotNull(group02);
+        assertEquals(Long.valueOf(2L), group02.getTotalItems());
+        assertEquals(
+                List.of(
+                        utcDate(2025, 1, 2),
+                        utcDate(2025, 1, 1)
+                ),
+                getDates(group02)
+        );
+
+        EntityList<GroupByEntity> group03 = multimap.getItems().get("test03");
+        assertNotNull(group03);
+        assertEquals(Long.valueOf(3L), group03.getTotalItems());
+        assertEquals(
+                List.of(
+                        utcDate(2025, 1, 3),
+                        utcDate(2025, 1, 2),
+                        utcDate(2025, 1, 1)
+                ),
+                getDates(group03)
+        );
+
+        EntityList<GroupByEntity> group04 = multimap.getItems().get("test04");
+        assertNotNull(group04);
+        assertEquals(Long.valueOf(4L), group04.getTotalItems());
+        assertEquals(
+                List.of(
+                        utcDate(2025, 1, 4),
+                        utcDate(2025, 1, 3),
+                        utcDate(2025, 1, 2)
+                ),
+                getDates(group04)
+        );
+
+        EntityList<GroupByEntity> nonExistingGroup = multimap.getItems().get("DOES_NOT_EXIST");
+        assertNotNull(nonExistingGroup);
+        assertEquals(Long.valueOf(0L), nonExistingGroup.getTotalItems());
+        assertEquals(List.of(), getDates(nonExistingGroup));
+
+        assertEquals(Long.valueOf(9L), multimap.getTotalItems());
+    }
+
+    private static Date utcDate(int year, int month, int day) {
+        return Date.from(LocalDate.of(year, month, day).atStartOfDay(ZoneOffset.UTC).toInstant());
+    }
+
+    private static List<Date> getDates(EntityList<GroupByEntity> list) {
+        return list.getItems()
+                .stream()
+                .map(GroupByEntity::getDate)
+                .collect(Collectors.toList());
+    }
+
+    @Test
     public void testAllowGroupBy_explicitlyDisallowGroupBy_doNotAllowQueryWithGroupBy() {
         final TestServiceDao dao = new TestServiceDao(fakedDatastore, TestEntity.class, NoOpStatsReporter.INSTANCE, false);
         Assert.assertFalse(dao.allowGroupBy);
@@ -83,7 +185,7 @@ public class ServiceDaoTest {
             dao.get(q);
             fail("Group by should not be allowed!, but it was");
         } catch (RestDslException e) {
-            Assert.assertEquals(QUERY_ERROR, e.getType());
+            assertEquals(QUERY_ERROR, e.getType());
         }
 
         // get without groupBy -> successful
@@ -115,4 +217,13 @@ public class ServiceDaoTest {
         }
     }
 
+    static class TestWithDateDao extends MongoServiceDao<GroupByEntity, Long> {
+        public TestWithDateDao(Datastore datastore) {
+            super(datastore, GroupByEntity.class);
+        }
+
+        public TestWithDateDao(Datastore datastore, StatsReporter statsReporter, boolean allowGroupBy) {
+            super(datastore, GroupByEntity.class, statsReporter, allowGroupBy);
+        }
+    }
 }
