@@ -221,9 +221,5 @@ public class ServiceDaoTest {
         public TestWithDateDao(Datastore datastore) {
             super(datastore, GroupByEntity.class);
         }
-
-        public TestWithDateDao(Datastore datastore, StatsReporter statsReporter, boolean allowGroupBy) {
-            super(datastore, GroupByEntity.class, statsReporter, allowGroupBy);
-        }
     }
 }
