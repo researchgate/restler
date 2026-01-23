@@ -11,8 +11,8 @@ import dev.morphia.Morphia;
 import net.researchgate.restdsl.GroupByEntity;
 import net.researchgate.restdsl.TestEntity;
 import net.researchgate.restdsl.exceptions.RestDslException;
-import net.researchgate.restdsl.metrics.NoOpStatsReporter;
-import net.researchgate.restdsl.metrics.StatsReporter;
+import net.researchgate.restdsl.metrics.MetricSink;
+import net.researchgate.restdsl.metrics.NoOpMetricSink;
 import net.researchgate.restdsl.queries.ServiceQuery;
 import net.researchgate.restdsl.results.EntityList;
 import net.researchgate.restdsl.results.EntityMultimap;
@@ -173,7 +173,7 @@ public class ServiceDaoTest {
 
     @Test
     public void testAllowGroupBy_explicitlyDisallowGroupBy_doNotAllowQueryWithGroupBy() {
-        final TestServiceDao dao = new TestServiceDao(fakedDatastore, TestEntity.class, NoOpStatsReporter.INSTANCE, false);
+        final TestServiceDao dao = new TestServiceDao(fakedDatastore, TestEntity.class, NoOpMetricSink.INSTANCE, false);
         Assert.assertFalse(dao.allowGroupBy);
 
         final ServiceQuery<Long> q = ServiceQuery.<Long>builder()
@@ -212,8 +212,8 @@ public class ServiceDaoTest {
             super(datastore, entityClazz);
         }
 
-        public TestServiceDao(Datastore datastore, Class<TestEntity> entityClazz, StatsReporter statsReporter, boolean allowGroupBy) {
-            super(datastore, entityClazz, statsReporter, allowGroupBy);
+        public TestServiceDao(Datastore datastore, Class<TestEntity> entityClazz, MetricSink metricSink, boolean allowGroupBy) {
+            super(datastore, entityClazz, metricSink, allowGroupBy);
         }
     }
 

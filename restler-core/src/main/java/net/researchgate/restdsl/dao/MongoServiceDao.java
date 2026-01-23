@@ -17,8 +17,8 @@ import dev.morphia.query.Query;
 import dev.morphia.query.updates.UpdateOperator;
 import dev.morphia.query.updates.UpdateOperators;
 import net.researchgate.restdsl.exceptions.RestDslException;
-import net.researchgate.restdsl.metrics.NoOpStatsReporter;
-import net.researchgate.restdsl.metrics.StatsReporter;
+import net.researchgate.restdsl.metrics.MetricSink;
+import net.researchgate.restdsl.metrics.NoOpMetricSink;
 import net.researchgate.restdsl.queries.ServiceQuery;
 import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
@@ -41,17 +41,53 @@ public class MongoServiceDao<V, K> extends MongoBaseServiceDao<V, K> implements 
     private static final Logger LOGGER = LoggerFactory.getLogger(MongoServiceDao.class);
 
     public MongoServiceDao(Datastore datastore, Class<V> entityClazz) {
-        this(datastore, entityClazz, NoOpStatsReporter.INSTANCE);
+        this(datastore, entityClazz, NoOpMetricSink.INSTANCE);
     }
 
-    public MongoServiceDao(Datastore datastore, Class<V> entityClazz, StatsReporter statsReporter) {
+    /**
+     * Creates a new DAO.
+     *
+     * @param datastore Morphia datastore to query and update
+     * @param entityClazz Class of objects to bind MongoDB documents to
+     * @param statsReporter Instrumentation to collect query durations
+     *
+     * @deprecated Use {@link #MongoServiceDao(Datastore, Class, MetricSink)}
+     */
+    @Deprecated(since = "6.1.0", forRemoval = true)
+    @SuppressWarnings("removal")
+    public MongoServiceDao(Datastore datastore, Class<V> entityClazz, net.researchgate.restdsl.metrics.StatsReporter statsReporter) {
         // allow group by in order to be backwards compatible.
         this(datastore, entityClazz, statsReporter, true);
     }
 
+    public MongoServiceDao(Datastore datastore, Class<V> entityClazz, MetricSink metricSink) {
+        // allow group by in order to be backwards compatible.
+        this(datastore, entityClazz, metricSink, true);
+    }
+
+    /**
+     * Creates a new DAO.
+     *
+     * @param datastore Morphia datastore to query and update
+     * @param entityClazz Class of objects to bind MongoDB documents to
+     * @param statsReporter Instrumentation to collect query durations
+     * @param allowGroupBy Whether to allow or deny group by queries
+     *
+     * @deprecated Use {@link #MongoServiceDao(Datastore, Class, MetricSink, boolean)}
+     */
     // This constructor allows clients to migrate to a dao that does not allow groupBy queries
-    public MongoServiceDao(Datastore datastore, Class<V> entityClazz, StatsReporter statsReporter, boolean allowGroupBy) {
+    @Deprecated(since = "6.1.0", forRemoval = true)
+    @SuppressWarnings("removal")
+    public MongoServiceDao(Datastore datastore, Class<V> entityClazz, net.researchgate.restdsl.metrics.StatsReporter statsReporter, boolean allowGroupBy) {
         super(datastore, entityClazz, statsReporter);
+        // allow group by in order to be backwards compatible.
+        if (allowGroupBy) {
+            setAllowGroupBy();
+        }
+    }
+
+    public MongoServiceDao(Datastore datastore, Class<V> entityClazz, MetricSink metricSink, boolean allowGroupBy) {
+        super(datastore, entityClazz, metricSink);
         // allow group by in order to be backwards compatible.
         if (allowGroupBy) {
             setAllowGroupBy();

@@ -214,9 +214,9 @@ You can always look at restler-service module, to see how these classes are supp
 
 ## Query Shapes
 
-Since the GET endpoint is pretty flexible it's becomes more important to understand how it is used and if we have performance problems what access patterns cause them. For this a query shapes functionality exists in restler. By providing an implementation of the `StatsReporter` interface, the rest you will get for free.
+Since the GET endpoint is pretty flexible it's becomes more important to understand how it is used and if we have performance problems what access patterns cause them. For this a query shapes functionality exists in restler. By providing an implementation of the `MetricSink` interface, the rest you will get for free.
 
-One of the possibilities is to log query shapes to graphite. E.g. under `$servicePath/queries/shapes`. The all grouped by a Mongo collection name (`accounts` in the example below).
+One of the possibilities is to log query shapes to Graphite or ingest into Prometheus.
 
 The format of a query shape can be described by the following regex:
 
@@ -226,9 +226,10 @@ where `fieldName` is a field name from your entity.
 
 * `IDS` means that a primary key (_id) were provided into the query
 * `CRITERIA` tells that filtering was made on those additional fields
+* `SYNCMATCH` additional filtering of array elements using $elemMatch
 * `ORDER` – sorting was done on a particular field 
-* `GROUPBY` returned results will be grouped together by the field provided& 
-* `LIMIT` - a query contained a limit. Typically when querying by a criteria a limit should be provided.
+* `GROUPBY` returned results will be grouped together by the field provided
+* `LIMIT` - a query contained a limit. Typically, when querying by a criteria a limit should be provided.
 
 #### Examples
 
@@ -237,7 +238,7 @@ where `fieldName` is a field name from your entity.
 	* Sorting was done on "createdAt" field descending
 * `IDS-CRITERIA-nickname_state`
 	* `IDS` means that primary keys were provided 
-	* Additionally those entities were filtered on "nickname" and "state" fields
+	* Additionally, those entities were filtered on "nickname" and "state" fields
 * `-CRITERIA-nickname_state_rating-ORDER--createdAt-GROUPBY-mentorAccountId-LIMIT`
 	* Filtering on three fields (nickname, state, rating)
 	* Ordering by "createdAt" descending (note the minus) 

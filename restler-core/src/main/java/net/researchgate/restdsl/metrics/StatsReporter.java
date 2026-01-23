@@ -1,5 +1,9 @@
 package net.researchgate.restdsl.metrics;
 
+/**
+ * @deprecated Use {@link MetricSink}
+ */
+@Deprecated(since = "6.1.0", forRemoval = true)
 public interface StatsReporter {
 
     void timing(String key, long value, double sampleRate);

@@ -8,15 +8,17 @@ import com.google.common.collect.Sets;
 import dev.morphia.Datastore;
 import dev.morphia.DeleteOptions;
 import dev.morphia.query.FindOptions;
+import dev.morphia.query.MorphiaCursor;
 import dev.morphia.query.Query;
 import dev.morphia.query.Sort;
 import dev.morphia.query.filters.Filter;
 import net.researchgate.restdsl.domain.EntityIndexInfo;
 import net.researchgate.restdsl.domain.EntityInfo;
 import net.researchgate.restdsl.exceptions.RestDslException;
-import net.researchgate.restdsl.metrics.NoOpStatsReporter;
-import net.researchgate.restdsl.metrics.StatsReporter;
-import net.researchgate.restdsl.metrics.StatsTimingWrapper;
+import net.researchgate.restdsl.metrics.MetricName;
+import net.researchgate.restdsl.metrics.MetricSink;
+import net.researchgate.restdsl.metrics.MetricSinkTimingWrapper;
+import net.researchgate.restdsl.metrics.NoOpMetricSink;
 import net.researchgate.restdsl.queries.ServiceQuery;
 import net.researchgate.restdsl.queries.ServiceQueryInfo;
 import net.researchgate.restdsl.queries.ServiceQueryReservedValue;
@@ -53,25 +55,25 @@ import static dev.morphia.query.filters.Filters.nin;
 /**
  * This Dao implements common access to the underlying mongo collection.
  * Use this dao if you want to make sure that your data is only written to in a controlled way.
- *
- * Supported operations
- * - get by restler dsl
- * - delete by id
- *
- * If you want to simply expose CRUD via REST, use a {@link MongoServiceDao}.
+ * <p>Supported operations</p>
+ * <ul>
+ *     <li>get by restler dsl</li>
+ *     <li>delete by id</li>
+ *</ul>
+ * <p>If you want to simply expose CRUD via REST, use a {@link MongoServiceDao}.</p>
  *
  * @param <V> Type of the entity
  * @param <K> Type of the entity's id field
  */
 public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
+    public static final String MONGO_SERVICE_QUERY_METRIC = "mongo_service_query";
     private static final Logger LOGGER = LoggerFactory.getLogger(MongoBaseServiceDao.class);
 
-    private static final String QUERY_KEY = "queries.shapes.%s.%%H";
     protected final String collectionName;
     protected final Class<V> entityClazz;
     protected final EntityInfo<V> entityInfo;
     protected final EntityIndexInfo<V> entityIndexInfo;
-    protected final StatsReporter statsReporter;
+    protected final MetricSink metricSink;
 
     // group by operations may require a lot of requests to the database. We should have to explicitly enable it
     protected boolean allowGroupBy = false;
@@ -79,19 +81,34 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
     protected final Datastore datastore;
     private final EntityFieldMapper entityMapper;
 
+    @SuppressWarnings("unused")
     public MongoBaseServiceDao(Datastore datastore, Class<V> entityClazz) {
-        this(datastore, entityClazz, NoOpStatsReporter.INSTANCE);
+        this(datastore, entityClazz, NoOpMetricSink.INSTANCE);
     }
-    //TODO: provide implementations for StatsReporter in example service
-    public MongoBaseServiceDao(Datastore datastore, Class<V> entityClazz, StatsReporter statsReporter) {
 
+    /**
+     * Creates a new DAO.
+     *
+     * @param datastore Morphia datastore to query and update
+     * @param entityClazz Class of objects to bind MongoDB documents to
+     * @param statsReporter Instrumentation to collect query durations
+     *
+     * @deprecated use {@link #MongoBaseServiceDao(Datastore, Class, MetricSink)}
+     */
+    @Deprecated
+    @SuppressWarnings("removal")
+    public MongoBaseServiceDao(Datastore datastore, Class<V> entityClazz, net.researchgate.restdsl.metrics.StatsReporter statsReporter) {
+        this(datastore, entityClazz, new net.researchgate.restdsl.metrics.MetricSinkStatsReporterAdaptor(statsReporter));
+    }
+
+    public MongoBaseServiceDao(Datastore datastore, Class<V> entityClazz, MetricSink metricSink) {
         this.datastore = datastore;
         this.collectionName = datastore.getMapper().getEntityModel(entityClazz).getCollectionName();
         this.entityClazz = entityClazz;
         this.entityMapper = new MongoEntityFieldMapper(datastore);
         this.entityInfo = EntityInfo.get(entityMapper, entityClazz);
         this.entityIndexInfo = new EntityIndexInfo<>(datastore, entityClazz, datastore.getCollection(entityClazz).listIndexes());
-        this.statsReporter = statsReporter;
+        this.metricSink = metricSink;
         validateMorphiaAnnotations(entityClazz, new HashSet<>());
     }
 
@@ -101,9 +118,8 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
     }
 
     /**
-     * explicitly allow groupBy in get queries.
-     *
-     * If not, we will throw a RestDsl exception when the client queries with a groupBy.
+     * Explicitly allow groupBy in get queries. If not, we will throw a RestDsl exception when the client queries with
+     * a groupBy.
      */
     protected void setAllowGroupBy() {
         this.allowGroupBy = true;
@@ -169,13 +185,15 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
         Query<V> morphiaQuery = convertToMorphiaQuery(serviceQuery);
         FindOptions findOptions = toFindOptions(serviceQuery);
 
-        try (StatsTimingWrapper ignored = getQueryShapeWrapper(serviceQuery)) {
+        try (MetricSinkTimingWrapper ignored = getQueryShapeWrapper(serviceQuery)) {
             String groupBy = serviceQuery.getGroupBy();
             if (groupBy == null) {
                 List<V> results = Collections.emptyList();
                 if (!serviceQuery.getCountOnly()) {
                     LOGGER.debug("Executing query {}", morphiaQuery);
-                    results = morphiaQuery.iterator(findOptions).toList();
+                    try (MorphiaCursor<V> iterator = morphiaQuery.iterator(findOptions)) {
+                        results = iterator.toList();
+                    }
                 }
                 return new EntityResult<>(results, getTotalItemsCnt(morphiaQuery, serviceQuery, results));
             } else {
@@ -193,7 +211,9 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
                     List<V> resultPerKey = Collections.emptyList();
                     if (!serviceQuery.getCountOnly()) {
                         LOGGER.debug("Executing query {}", q);
-                        resultPerKey = q.iterator(findOptions).toList();
+                        try (MorphiaCursor<V> iterator = q.iterator(findOptions)) {
+                            resultPerKey = iterator.toList();
+                        }
                     }
 
                     EntityList<V> entityList = new EntityList<>(resultPerKey, getTotalItemsCnt(q, serviceQuery, resultPerKey));
@@ -333,12 +353,12 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
         }
 
         // if getLimit == 0 then we need to count anyway
-        if (results.size() == 0 && serviceQuery.getOffset() == 0 && serviceQuery.getLimit() > 0) {
+        if (results.isEmpty() && serviceQuery.getOffset() == 0 && serviceQuery.getLimit() > 0) {
             return 0L;
         }
 
         // if size is equal 0 it could be that offset is too big, or we just have 0 elements in total - must count
-        if (results.size() != 0 && results.size() < serviceQuery.getLimit()) {
+        if (!results.isEmpty() && results.size() < serviceQuery.getLimit()) {
             return (long) (serviceQuery.getOffset() + results.size());
         } else {
             return q.count();
@@ -361,7 +381,7 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
             throw new RestDslException("Query limit must be positive", RestDslException.Type.QUERY_ERROR);
         }
 
-        // for primary keys it could also works, but it does not make sense to group on them since they are unique
+        // for primary keys it could also work, but it does not make sense to group on them since they are unique
         if (serviceQuery.getGroupBy() != null &&
                 (serviceQuery.getCriteria() == null || !serviceQuery.getCriteria().containsKey(serviceQuery.getGroupBy()))) {
             throw new RestDslException("When provided, groupBy parameter should be contained in query criteria",
@@ -393,14 +413,21 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
     }
 
     // PRIVATE
-    private StatsTimingWrapper getQueryShapeWrapper(ServiceQuery<K> serviceQuery) {
-        return StatsTimingWrapper.of(statsReporter, String.format(QUERY_KEY, collectionName + "." + serviceQuery.getQueryShape()));
+    private MetricSinkTimingWrapper getQueryShapeWrapper(ServiceQuery<K> serviceQuery) {
+        MetricName name = new MetricName(
+                MONGO_SERVICE_QUERY_METRIC,
+                Map.of(
+                        "collectionName", collectionName,
+                        "queryShape", serviceQuery.getQueryShape()
+                )
+        );
+        return MetricSinkTimingWrapper.of(metricSink, name);
     }
 
 
     // TODO Remove this after the morphia migration.
     // This method checks, that there are no old 'org.mongodb.morphia' annotations present on the morphia managed entities.
-    private void validateMorphiaAnnotations(Class<?> klass, Set<Class> seen) {
+    private void validateMorphiaAnnotations(Class<?> klass, Set<Class<?>> seen) {
         if (!seen.add(klass)) { // break circular deps
             return;
         }

@@ -1,5 +1,10 @@
 # Changelog
 
+### 6.1.0
+* Expose metrics more structured
+* Deprecations:
+  * net.researchgate.restdsl.metrics.StatsReporter; to be replaced by net.researchgate.restdsl.metrics.MetricSink
+
 ### 6.0.2
 * Fixed an issue with `totalItems` on `groupBy` queries returning incorrect results
 
