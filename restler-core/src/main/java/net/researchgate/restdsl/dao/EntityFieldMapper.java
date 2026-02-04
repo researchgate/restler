@@ -27,5 +27,6 @@ public interface EntityFieldMapper {
 
     Object getIdValue(Class<?> clazz, Object instance);
 
+    void setIdValue(Class<?> clazz, Object instance, Object idValue);
 
 }

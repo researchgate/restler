@@ -73,4 +73,18 @@ public class GenericFieldMapper implements EntityFieldMapper {
         }
         return null;
     }
+
+    @Override
+    public void setIdValue(Class<?> clazz, Object instance, Object idValue) {
+        String idFieldName = getIdFieldName(clazz);
+        if (idFieldName != null) {
+            try {
+                Field field = clazz.getDeclaredField(idFieldName);
+                field.setAccessible(true);
+                field.set(instance, idValue);
+            } catch (NoSuchFieldException | IllegalAccessException e) {
+                throw new RestDslException("Cannot set id field on " + clazz.getCanonicalName(), RestDslException.Type.ENTITY_ERROR);
+            }
+        }
+    }
 }

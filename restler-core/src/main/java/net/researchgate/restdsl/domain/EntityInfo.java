@@ -60,4 +60,8 @@ public class EntityInfo<V> {
         return (K) mapper.getIdValue(entityClass, entity);
     }
 
+    public void setIdFieldValue(V entity, Object idValue) {
+        mapper.setIdValue(entityClass, entity, idValue);
+    }
+
 }
