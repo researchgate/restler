@@ -54,4 +54,10 @@ public class MongoEntityFieldMapper implements EntityFieldMapper {
         EntityModel entityModel = mapper.getEntityModel(clazz);
         return entityModel.getIdProperty().getValue(instance);
     }
+
+    @Override
+    public void setIdValue(Class<?> clazz, Object instance, Object idValue) {
+        EntityModel entityModel = mapper.getEntityModel(clazz);
+        entityModel.getIdProperty().setValue(instance, idValue);
+    }
 }

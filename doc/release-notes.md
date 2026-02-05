@@ -1,5 +1,8 @@
 # Changelog
 
+### 6.1.1
+* Fixed an issue with PUT endpoint and id param not present in the body of the request
+
 ### 6.1.0
 * Expose metrics more structured
 * Deprecations:
