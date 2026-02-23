@@ -1,5 +1,8 @@
 # Changelog
 
+### 6.1.2
+* Bump morphia version from 2.4.4 to 2.4.15 to include a bug fix for embedded entity mapping exceptions.
+
 ### 6.1.1
 * Fixed an issue with PUT endpoint and id param not present in the body of the request
 
