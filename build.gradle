@@ -67,7 +67,7 @@ project(":restler-core") {
     }
 
     dependencies {
-        compile group: 'dev.morphia.morphia', name: 'morphia-core', version: '2.4.4'
+        compile group: 'dev.morphia.morphia', name: 'morphia-core', version: '2.4.15'
         compile group: 'org.mongodb', name: 'mongodb-driver-sync', version: '4.10.2'
 
         compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.14.2'
