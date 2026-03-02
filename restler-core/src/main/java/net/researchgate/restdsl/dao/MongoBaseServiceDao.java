@@ -173,12 +173,27 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
         return findOptions;
     }
 
-    private static Sort parseSortString(String sortString) {
-        // Check if the string starts with "-" indicating descending order
-        if (sortString.startsWith("-")) {
-            return Sort.descending(sortString.substring(1)); // Remove the "-" character
+    private static Sort[] parseSortString(String sortString) {
+        if (sortString == null || sortString.isBlank()) {
+            return new Sort[0];
         }
-        return Sort.ascending(sortString);
+
+        String[] tokens = sortString.split(",");
+        List<Sort> sorts = new ArrayList<>();
+
+        for (String token : tokens) {
+            token = token.trim();
+            if (token.isEmpty())
+                continue;
+
+            if (token.startsWith("-")) {
+                sorts.add(Sort.descending(token.substring(1)));
+            } else {
+                sorts.add(Sort.ascending(token));
+            }
+        }
+
+        return sorts.toArray(new Sort[0]);
     }
 
     public EntityResult<V> get(ServiceQuery<K> serviceQuery) throws RestDslException {
@@ -423,7 +438,6 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
         );
         return MetricSinkTimingWrapper.of(metricSink, name);
     }
-
 
     // TODO Remove this after the morphia migration.
     // This method checks, that there are no old 'org.mongodb.morphia' annotations present on the morphia managed entities.

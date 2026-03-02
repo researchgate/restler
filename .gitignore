@@ -12,3 +12,12 @@ build/
 out/
 classes
 logs
+
+.vscode/
+restler-core/bin/
+restler-core/target/
+restler-core/build/
+
+restler-service/bin/
+restler-service/target/
+restler-service/build/

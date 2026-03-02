@@ -56,7 +56,6 @@ public class ServiceDaoTest {
                 .applyConnectionString(uri)
                 .build();
 
-
         client = MongoClients.create(clientSettings);
         fakedDatastore = Morphia.createDatastore(client, "testDatabase");
         final TestServiceDao dao = new TestServiceDao(fakedDatastore, TestEntity.class);
@@ -205,6 +204,38 @@ public class ServiceDaoTest {
 
         dao.save(new TestEntity(2L, "nonUniqueValue"));
         assertThrows(RestDslException.class, () -> dao.save(new TestEntity(3L, "nonUniqueValue")));
+    }
+
+    @Test
+    public void testMultiSortOrder() {
+        final TestWithDateDao dao = new TestWithDateDao(fakedDatastore);
+
+        final ServiceQuery<Long> q = ServiceQuery.<Long>builder()
+                .order("group,-date")
+                .limit(6)
+                .build();
+        EntityResult<GroupByEntity> result = dao.get(q);
+        List<GroupByEntity> items = result.asList();
+
+        assertEquals(6, items.size());
+
+        assertEquals("test01", items.get(0).getGroup());
+        assertEquals(utcDate(2025, 1, 1), items.get(0).getDate());
+
+        assertEquals("test02", items.get(1).getGroup());
+        assertEquals(utcDate(2025, 1, 2), items.get(1).getDate());
+
+        assertEquals("test02", items.get(2).getGroup());
+        assertEquals(utcDate(2025, 1, 1), items.get(2).getDate());
+
+        assertEquals("test03", items.get(3).getGroup());
+        assertEquals(utcDate(2025, 1, 3), items.get(3).getDate());
+
+        assertEquals("test03", items.get(4).getGroup());
+        assertEquals(utcDate(2025, 1, 2), items.get(4).getDate());
+
+        assertEquals("test03", items.get(5).getGroup());
+        assertEquals(utcDate(2025, 1, 1), items.get(5).getDate());
     }
 
     static class TestServiceDao extends MongoServiceDao<TestEntity, Long> {
