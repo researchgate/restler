@@ -1,27 +1,37 @@
 # Changelog
 
+### 6.1.3
+
+* Updated query sorting logic to support multiple fields.
+
 ### 6.1.2
+
 * Bump morphia version from 2.4.4 to 2.4.15 to include a bug fix for embedded entity mapping exceptions.
 
 ### 6.1.1
+
 * Fixed an issue with PUT endpoint and id param not present in the body of the request
 
 ### 6.1.0
+
 * Expose metrics more structured
 * Deprecations:
   * net.researchgate.restdsl.metrics.StatsReporter; to be replaced by net.researchgate.restdsl.metrics.MetricSink
 
 ### 6.0.2
+
 * Fixed an issue with `totalItems` on `groupBy` queries returning incorrect results
 
 ### 6.0.1
+
 * Restored error handling for duplicate key exceptions
 
 ### 6.0.0
-* Backwards incompatible changes: 
+
+* Backwards incompatible changes:
   * Upgraded to mongodb-driver-sync 4.10.2 and morphia 2.4.4
   * Upgraded from Java 8 to Java 11
-  * Interface changes: 
+  * Interface changes:
     * `preUpdate` now uses List<UpdateOperator> instead of UpdateOperations
     * `MongoBaseServiceDao::createUpdateOperations` has been removed
   * Morphia required changes
@@ -38,14 +48,17 @@
     * the filter must include an equality match on the full shard key.
 
 ### 5.0.0
+
 * Backwards incompatible change: Upgraded mongoDB client to 4.1.1
 
 ### 4.0.0
+
 * Backwards incompatible change: Upgraded morphia 1.3.2 to 1.5.8. This changes the morphia namespace from 'org.mongodb.morphia' to 'dev.morphia'
 
 ### 3.1.0
- * Backwards incompatible change: The BaseServiceResource now uses a BaseServiceModel (was: ServiceModel), with a smaller api. If you need the api of the ServiceModel, you can keep a reference to the passed in ServiceModel to the constructor. 
- * Feature: Split out BaseServiceModel and BaseServiceDao that expose just the read restDsl 
- * Feature: It is now possible to prevent client from performing groupBy queries.
 
- * Backwards incompatible change: Artifacts are no longer published to JCenter, but will use [GitHub packages](https://github.com/features/packages) instead at [restler packages](https://github.com/orgs/researchgate/packages?repo_name=restler) 
+* Backwards incompatible change: The BaseServiceResource now uses a BaseServiceModel (was: ServiceModel), with a smaller api. If you need the api of the ServiceModel, you can keep a reference to the passed in ServiceModel to the constructor.
+* Feature: Split out BaseServiceModel and BaseServiceDao that expose just the read restDsl
+* Feature: It is now possible to prevent client from performing groupBy queries.
+
+* Backwards incompatible change: Artifacts are no longer published to JCenter, but will use [GitHub packages](https://github.com/features/packages) instead at [restler packages](https://github.com/orgs/researchgate/packages?repo_name=restler)
