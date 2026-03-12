@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Schema;
+import net.researchgate.restdsl.annotations.SegmentParameter;
 import net.researchgate.restdsl.domain.EntityInfo;
 import net.researchgate.restdsl.exceptions.RestDslException;
 import net.researchgate.restdsl.model.BaseServiceModel;
@@ -68,7 +69,7 @@ public abstract class BaseServiceResource<V, K> {
     }
 
     @Operation(summary = "Retrieve entities using the generic researchgate 'restler' query-language: https://github.com/researchgate/restler#get")
-    @Parameter(name = "segment", in = ParameterIn.PATH, schema = @Schema(type = "string", example = "-"), description = "A rest-dsl query, See https://github.com/researchgate/restler#get")
+    @SegmentParameter
     @Parameter(name = "fields", in = ParameterIn.QUERY, description = "Only return this list of comma-separated fields. Use '*' to return all", example = "*")
     @Parameter(name = "limit", in = ParameterIn.QUERY, schema = @Schema(type = "integer", format = "int32"), description = "Limit the number of returned records")
     @Parameter(name = "offset", in = ParameterIn.QUERY, schema = @Schema(type = "integer", format = "int32"), description = "Skip this many records. Use this together with limit to implement pagination.")
@@ -84,7 +85,7 @@ public abstract class BaseServiceResource<V, K> {
     }
 
     @Operation(summary = "Returns a human readable description of the generated database operations. This is intended for client to develop and debug rest-dsl queries")
-    @Parameter(name = "segment", in = ParameterIn.PATH, schema = @Schema(type = "string", example = "-"), description = "A rest-dsl query, See https://github.com/researchgate/restler#get")
+    @SegmentParameter
     @Parameter(name = "fields", in = ParameterIn.QUERY, description = "Only return this list of comma-separated fields. Use '*' to return all", example = "*")
     @Parameter(name = "limit", in = ParameterIn.QUERY, schema = @Schema(type = "integer", format = "int32"), description = "Limit the number of returned records")
     @Parameter(name = "offset", in = ParameterIn.QUERY, schema = @Schema(type = "integer", format = "int32"), description = "Skip this many records. Use this together with limit to implement pagination.")
