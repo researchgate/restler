@@ -6,8 +6,6 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.squarespace.jersey2.guice.JerseyGuiceUtils;
-import dev.morphia.Datastore;
-import dev.morphia.Morphia;
 import io.dropwizard.jersey.guava.OptionalMessageBodyWriter;
 import io.dropwizard.jersey.guava.OptionalParamFeature;
 import io.dropwizard.testing.junit.ResourceTestRule;
@@ -21,8 +19,7 @@ import net.researchgate.restler.domain.Account;
 import net.researchgate.restler.domain.AccountState;
 import net.researchgate.restler.domain.AccountStats;
 import net.researchgate.restler.domain.Publication;
-import net.researchgate.restler.service.dao.AccountDao;
-import net.researchgate.restler.service.dao.PublicationDao;
+
 import net.researchgate.restler.service.exceptions.ServiceException;
 import net.researchgate.restler.service.exceptions.ServiceExceptionMapper;
 import net.researchgate.restler.service.model.AccountModel;
@@ -459,6 +456,83 @@ public class AccountResourceTest {
         response = resources.client().target("/accounts/-;rating=$any").request().get();
         assertThat(response.getStatusInfo()).isEqualTo(Response.Status.OK);
         assertThat(response.readEntity(EntityResult.class).getTotalItems()).isEqualTo(2);
+    }
+
+    @Test
+    public void testDeleteMultiple() {
+        // Create 3 accounts
+        Account account1 = postAccount(mockedAccount()).readEntity(Account.class);
+        Account account2 = postAccount(mockedAccount()).readEntity(Account.class);
+        Account account3 = postAccount(mockedAccount()).readEntity(Account.class);
+
+        assertNotNull(account1.getId());
+        assertNotNull(account2.getId());
+        assertNotNull(account3.getId());
+
+        // Verify all 3 exist
+        Response listResponse = resources.client().target("/accounts/-;").request().get();
+        assertThat(listResponse.getStatusInfo()).isEqualTo(Response.Status.OK);
+        assertThat(listResponse.readEntity(EntityResult.class).getTotalItems()).isEqualTo(3);
+
+        // Delete account1 and account2 by id query
+        String deleteQuery = account1.getId() + "," + account2.getId();
+        Response deleteResponse = resources.client()
+                .target("/accounts/-;id=" + deleteQuery)
+                .request()
+                .delete();
+
+        assertThat(deleteResponse.getStatusInfo()).isEqualTo(Response.Status.OK);
+        String deleteBody = deleteResponse.readEntity(String.class);
+        assertThat(deleteBody).contains("\"deleted\"");
+        assertThat(deleteBody).contains("2");
+
+        // Verify only account3 remains
+        listResponse = resources.client().target("/accounts/-;").request().get();
+        assertThat(listResponse.getStatusInfo()).isEqualTo(Response.Status.OK);
+        assertThat(listResponse.readEntity(EntityResult.class).getTotalItems()).isEqualTo(1);
+
+        // Verify the remaining account is account3
+        Response getResponse = resources.client()
+                .target("/accounts/" + account3.getId())
+                .request().get();
+        assertThat(getResponse.getStatusInfo()).isEqualTo(Response.Status.OK);
+        assertThat(getResponse.readEntity(EntityResult.class).getTotalItems()).isEqualTo(1);
+    }
+
+    @Test
+    public void testDeleteSingle() {
+        // Create 2 accounts
+        Account account1 = postAccount(mockedAccount()).readEntity(Account.class);
+        Account account2 = postAccount(mockedAccount()).readEntity(Account.class);
+
+        assertNotNull(account1.getId());
+        assertNotNull(account2.getId());
+
+        // Delete only account1 via /-;id= endpoint
+        Response deleteResponse = resources.client()
+                .target("/accounts/-;id=" + account1.getId())
+                .request()
+                .delete();
+
+        assertThat(deleteResponse.getStatusInfo()).isEqualTo(Response.Status.OK);
+        String deleteBody = deleteResponse.readEntity(String.class);
+        assertThat(deleteBody).isEqualTo("{\"deleted\": 1}");
+
+        // Verify account1 is gone
+        Response deletedAccountResponse = resources.client()
+                .target("/accounts/" + account1.getId())
+                .request().get();
+        assertThat(deletedAccountResponse.getStatusInfo()).isEqualTo(Response.Status.OK);
+        assertThat(deletedAccountResponse.readEntity(EntityResult.class).getTotalItems()).isEqualTo(0);
+
+        // Verify account2 is still present
+        Response remainingAccountResponse = resources.client()
+                .target("/accounts/" + account2.getId())
+                .request().get();
+        assertThat(remainingAccountResponse.getStatusInfo()).isEqualTo(Response.Status.OK);
+        EntityResult<Account> remaining = remainingAccountResponse.readEntity(EntityResult.getGenericType(Account.class));
+        assertThat(remaining.getTotalItems()).isEqualTo(1);
+        assertThat(remaining.asList().get(0).getId()).isEqualTo(account2.getId());
     }
 
     private <T> EntityResult<T> readResponseOrFail(Class<T> clazz, Response response) {

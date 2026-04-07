@@ -102,7 +102,7 @@ public class MongoServiceDao<V, K> extends MongoBaseServiceDao<V, K> implements 
         }
         preDelete(serviceQuery);
         Query<V> query = convertToMorphiaQuery(serviceQuery);
-        return Math.toIntExact(query.delete(new DeleteOptions()).getDeletedCount());
+        return Math.toIntExact(query.delete(new DeleteOptions().multi(true)).getDeletedCount());
     }
 
     @Override
