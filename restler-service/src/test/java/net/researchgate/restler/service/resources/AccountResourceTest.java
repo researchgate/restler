@@ -483,8 +483,7 @@ public class AccountResourceTest {
 
         assertThat(deleteResponse.getStatusInfo()).isEqualTo(Response.Status.OK);
         String deleteBody = deleteResponse.readEntity(String.class);
-        assertThat(deleteBody).contains("\"deleted\"");
-        assertThat(deleteBody).contains("2");
+        assertThat(deleteBody).isEqualTo("{\"deleted\": 2}");
 
         // Verify only account3 remains
         listResponse = resources.client().target("/accounts/-;").request().get();

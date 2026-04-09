@@ -1,5 +1,9 @@
 # Changelog
 
+### 6.1.4
+* Fix an issue with delete endpoint -> bulk deletes used to delete only one document.
+* Bumps test-container version to 1.21.4 for compatibility with newer docker runtimes.
+
 ### 6.1.3
 
 * Updated query sorting logic to support multiple fields.
