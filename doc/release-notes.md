@@ -1,5 +1,9 @@
 # Changelog
 
+### 6.1.5
+
+* Bump Morphia from 2.4.15 to 2.4.20 to incorporate performance improvements on point queries
+
 ### 6.1.4
 * Fix an issue with delete endpoint -> bulk deletes used to delete only one document.
 * Bumps test-container version to 1.21.4 for compatibility with newer docker runtimes.
