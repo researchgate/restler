@@ -20,7 +20,7 @@ import net.researchgate.restdsl.exceptions.RestDslException;
 import net.researchgate.restdsl.metrics.MetricSink;
 import net.researchgate.restdsl.metrics.NoOpMetricSink;
 import net.researchgate.restdsl.queries.ServiceQuery;
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

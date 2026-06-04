@@ -26,7 +26,7 @@ import net.researchgate.restdsl.results.EntityList;
 import net.researchgate.restdsl.results.EntityMultimap;
 import net.researchgate.restdsl.results.EntityResult;
 import net.researchgate.restdsl.util.ServiceQueryUtil;
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

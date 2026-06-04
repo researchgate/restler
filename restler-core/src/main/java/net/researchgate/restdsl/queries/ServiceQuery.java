@@ -8,7 +8,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import net.researchgate.restdsl.exceptions.RestDslException;
 import net.researchgate.restdsl.util.ThreadLocalDateFormat;
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.Collection;
 import java.util.Collections;

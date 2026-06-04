@@ -1,8 +1,8 @@
 package net.researchgate.restdsl.results;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
@@ -14,7 +14,7 @@ import java.util.Map;
  * Grouped items by some id
  * Note it's mapped to entity lists so that we can have totalCount for each group
  */
-@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({"items", "totalItems"})
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class EntityMultimap<T> implements EntityContainer<T> {

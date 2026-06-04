@@ -2,7 +2,7 @@ package net.researchgate.restdsl.results;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -19,7 +19,7 @@ import java.util.List;
  * TODO: introduce redirects in the right manner
  */
 @Schema(description = "The response to to a restler query. Depending on the query, exactly one of the sub fields 'list' or 'multimap' is populated")
-@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class EntityResult<T> implements EntityContainer<T> {
     @Schema(description = "If the client query contains no groupBy parameter, then this field is populated")

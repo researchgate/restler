@@ -3,14 +3,13 @@ package net.researchgate.restler;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.google.common.collect.Lists;
-import com.hubspot.dropwizard.guicier.GuiceBundle;
-import io.dropwizard.Application;
-import io.dropwizard.setup.Bootstrap;
-import io.dropwizard.setup.Environment;
+import io.dropwizard.core.Application;
+import io.dropwizard.core.setup.Bootstrap;
+import io.dropwizard.core.setup.Environment;
 import net.researchgate.restler.service.config.RestlerConfig;
 import net.researchgate.restler.service.modules.RestlerServiceModule;
 import org.glassfish.jersey.server.ServerProperties;
+import ru.vyarus.dropwizard.guice.GuiceBundle;
 
 import java.io.File;
 import java.util.List;
@@ -20,7 +19,7 @@ import java.util.List;
  */
 public class RestlerApplication extends Application<RestlerConfig> {
 
-    private static List<String> configPlaces = Lists.newArrayList(
+    private static List<String> configPlaces = List.of(
             "config/config.yaml",
             "../config/config.yaml"
     );
@@ -37,8 +36,9 @@ public class RestlerApplication extends Application<RestlerConfig> {
         ObjectMapper mapper = bootstrap.getObjectMapper();
         mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
         mapper.configure(DeserializationFeature.READ_ENUMS_USING_TO_STRING, true);
-        GuiceBundle<RestlerConfig> guiceBundle = GuiceBundle.defaultBuilder(RestlerConfig.class)
-                .modules(Lists.newArrayList(new RestlerServiceModule()))
+
+        GuiceBundle guiceBundle = GuiceBundle.builder()
+                .modules(new RestlerServiceModule())
                 .build();
         bootstrap.addBundle(guiceBundle);
     }
