@@ -82,12 +82,13 @@ public class ServiceDaoTest {
 
     @Before
     public void resetTestEntityCollection() {
-        // testDuplicateKey_throws creates a unique index on TestEntity — drop the
-        // collection before each test so indexes from a previous test don't leak.
-        fakedDatastore.getDatabase().getCollection("TestEntity").drop();
-        final TestServiceDao dao = new TestServiceDao(fakedDatastore, TestEntity.class);
-        TestEntity dbEntity = dao.save(new TestEntity(1L, "test"));
-        dao.delete(dbEntity.getId());
+        // Drop and recreate the collection so leaked indexes (e.g. the unique index from
+        // testDuplicateKey_throws) are gone. The collection must exist before constructing
+        // TestServiceDao because MongoBaseServiceDao calls listIndexes() in its constructor.
+        var col = fakedDatastore.getCollection(TestEntity.class);
+        String collectionName = col.getNamespace().getCollectionName();
+        col.drop();
+        fakedDatastore.getDatabase().createCollection(collectionName);
     }
 
     @AfterClass

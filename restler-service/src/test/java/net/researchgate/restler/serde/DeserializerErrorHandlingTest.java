@@ -12,7 +12,7 @@ import static org.junit.Assert.*;
 
 /**
  * Tests for error handling in custom deserializers after migration
- * from ctxt.mappingException() to ctxt.handleUnexpectedToken().
+ * from ctxt.mappingException() to ctxt.reportInputMismatch().
  */
 public class DeserializerErrorHandlingTest {
 
@@ -50,7 +50,7 @@ public class DeserializerErrorHandlingTest {
         assertNotNull(result.date);
     }
 
-    // ---- Rfc3339DateDeserializer: error paths (handleUnexpectedToken) ----
+    // ---- Rfc3339DateDeserializer: error paths (reportInputMismatch) ----
 
     @Test(expected = MismatchedInputException.class)
     public void testDateDeserializer_rejectsNumericToken() throws Exception {
@@ -93,7 +93,7 @@ public class DeserializerErrorHandlingTest {
         assertEquals(validId, result.id.toHexString());
     }
 
-    // ---- ObjectIdDeserializer: error paths (handleUnexpectedToken) ----
+    // ---- ObjectIdDeserializer: error paths (reportInputMismatch) ----
 
     @Test(expected = MismatchedInputException.class)
     public void testObjectIdDeserializer_rejectsNumericToken() throws Exception {
