@@ -24,10 +24,10 @@ import net.researchgate.restler.service.model.PublicationModel;
 import net.researchgate.restler.service.modules.TestRestlerModule;
 import net.researchgate.restler.service.util.MongoDContainerRule;
 import org.bson.types.ObjectId;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.client.Entity;
@@ -39,7 +39,7 @@ import java.util.List;
 import java.util.Random;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Account resource test
@@ -63,7 +63,7 @@ public class AccountResourceTest {
 
     private static Random rnd = new Random();
 
-    @BeforeClass
+    @BeforeAll
     public static void setUp() throws Throwable {
         MONGODB.start();
         injector = Guice.createInjector(new TestRestlerModule(MONGODB));
@@ -79,7 +79,7 @@ public class AccountResourceTest {
         resources.before();
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() throws Throwable {
         if (resources != null) {
             resources.after();
@@ -87,7 +87,7 @@ public class AccountResourceTest {
         MONGODB.stop();
     }
 
-    @Before
+    @BeforeEach
     public void setUpTest() {
         MONGODB.getDatastore().getDatabase().drop();
         MONGODB.getDatastore().ensureIndexes();
@@ -350,7 +350,7 @@ public class AccountResourceTest {
         for (int limit = 0; limit < 2 * total; limit++) {
             for (int offset = 0; offset < 2 * total; offset++) {
                 res = accountModel.get(ServiceQuery.<ObjectId>builder().limit(limit).offset(offset).build());
-                assertEquals("For limit=" + limit + " and offset=" + offset, total, (long) res.getTotalItems());
+                assertEquals(total, (long) res.getTotalItems(), "For limit=" + limit + " and offset=" + offset);
                 assertTrue(res.getList().getItems().size() <= limit);
             }
         }
