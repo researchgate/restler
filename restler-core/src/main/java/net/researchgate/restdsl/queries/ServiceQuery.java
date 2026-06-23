@@ -5,14 +5,13 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
 import net.researchgate.restdsl.exceptions.RestDslException;
 import net.researchgate.restdsl.util.ThreadLocalDateFormat;
-import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -165,14 +164,14 @@ public final class ServiceQuery<K> {
 
         public ServiceQueryBuilder<K> fields(Collection<String> fields) {
             if (fields != null) {
-                query.fields = Collections.unmodifiableSet(Sets.newHashSet(fields));
+                query.fields = Collections.unmodifiableSet(new HashSet<>(fields));
             }
             return this;
         }
 
         public ServiceQueryBuilder<K> syncMatch(Collection<String> syncMatch) {
             if (syncMatch != null) {
-                query.syncMatch = Collections.unmodifiableSet(Sets.newHashSet(syncMatch));
+                query.syncMatch = Collections.unmodifiableSet(new HashSet<>(syncMatch));
             }
             return this;
         }
@@ -342,7 +341,7 @@ public final class ServiceQuery<K> {
 
     private void calculateQueryShape() {
         StringBuilder sb = new StringBuilder();
-        if (!CollectionUtils.isEmpty(ids)) {
+        if (!(ids == null || ids.isEmpty())) {
             sb.append("IDS").append(QS_FIELD_SEP);
         } else {
             sb.append(QS_FIELD_SEP);

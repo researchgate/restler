@@ -2,9 +2,7 @@ package net.researchgate.restdsl.dao;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
 import dev.morphia.Datastore;
 import dev.morphia.DeleteOptions;
 import dev.morphia.query.FindOptions;
@@ -26,7 +24,6 @@ import net.researchgate.restdsl.results.EntityList;
 import net.researchgate.restdsl.results.EntityMultimap;
 import net.researchgate.restdsl.results.EntityResult;
 import net.researchgate.restdsl.util.ServiceQueryUtil;
-import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -130,8 +127,8 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
         FindOptions findOptions = new FindOptions();
 
         if (serviceQuery.getFields() != null) {
-            Set<String> excludedFields = Sets.newHashSet();
-            Set<String> includedFields = Sets.newHashSet();
+            Set<String> excludedFields = new HashSet<>();
+            Set<String> includedFields = new HashSet<>();
             boolean all = false;
             for (String f : serviceQuery.getFields()) {
                 if (f.equals("*")) {
@@ -216,7 +213,7 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
                     throw new RestDslException("GroupBy is not allowed by this dao, but request contains groupBy '" + groupBy + "'. GroupBy can be enabled in the Service", RestDslException.Type.QUERY_ERROR);
                 }
                 // warning: in-place criteria editing
-                Collection<Object> criteriaForGrouping = Lists.newArrayList(serviceQuery.getCriteria().get(groupBy));
+                Collection<Object> criteriaForGrouping = new ArrayList<>(serviceQuery.getCriteria().get(groupBy));
 
                 Map<Object, EntityList<V>> groupedResult = new HashMap<>();
                 for (Object k : criteriaForGrouping) {
@@ -293,7 +290,7 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
             if (!syncMatchToCriteriaKeys.isEmpty()) {
                 for (String k : syncMatchToCriteriaKeys.keySet()) {
                     Collection<String> criteriaKeys = syncMatchToCriteriaKeys.get(k);
-                    List<Filter> elemMatchFilters = Lists.newArrayList();
+                    List<Filter> elemMatchFilters = new ArrayList<>();
                     for (String criteriaKey : criteriaKeys) {
                         elemMatchFilters.addAll(List.of(prepareFilters(criteriaKey.substring(k.length() + 1), serviceQuery.getCriteria().get(criteriaKey))));
                     }
@@ -307,7 +304,7 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
     }
 
     private Filter[] prepareFilters(String field, Collection<Object> criteria) {
-        List<Filter> filters = Lists.newArrayList();
+        List<Filter> filters = new ArrayList<>();
         if (criteria.size() == 1) {
             // range query
             Object val = criteria.iterator().next();
@@ -413,7 +410,7 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
         boolean queryIsSafe = true;
         // criteria is not empty and primary keys are not specified, then we need to check whether index is used
         boolean shouldCheckForIndex = serviceQuery.getCriteria() != null && !serviceQuery.getCriteria().isEmpty()
-                && CollectionUtils.isEmpty(serviceQuery.getIdList());
+                && (serviceQuery.getIdList() == null || serviceQuery.getIdList().isEmpty());
 
         if (shouldCheckForIndex) {
             queryIsSafe = false;

@@ -1,6 +1,5 @@
 package net.researchgate.restdsl.dao;
 
-import com.google.common.collect.Lists;
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.ErrorCategory;
 import com.mongodb.MongoBulkWriteException;
@@ -20,10 +19,10 @@ import net.researchgate.restdsl.exceptions.RestDslException;
 import net.researchgate.restdsl.metrics.MetricSink;
 import net.researchgate.restdsl.metrics.NoOpMetricSink;
 import net.researchgate.restdsl.queries.ServiceQuery;
-import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -97,7 +96,7 @@ public class MongoServiceDao<V, K> extends MongoBaseServiceDao<V, K> implements 
     @Override
     public int delete(ServiceQuery<K> serviceQuery) throws RestDslException {
         if ((serviceQuery.getCriteria() == null || serviceQuery.getCriteria().isEmpty())
-                && CollectionUtils.isEmpty(serviceQuery.getIdList())) {
+                && (serviceQuery.getIdList() == null || serviceQuery.getIdList().isEmpty())) {
             throw new RestDslException("Deletion query should either provide ids or criteria", RestDslException.Type.QUERY_ERROR);
         }
         preDelete(serviceQuery);
@@ -118,7 +117,7 @@ public class MongoServiceDao<V, K> extends MongoBaseServiceDao<V, K> implements 
 
     @Override
     public V patch(ServiceQuery<K> q, Map<String, Object> patchedFields) throws RestDslException {
-        List<UpdateOperator> ops = Lists.newArrayList();
+        List<UpdateOperator> ops = new ArrayList<>();
         for (Map.Entry<String, Object> e : patchedFields.entrySet()) {
             String key = e.getKey();
             Object value = e.getValue();
