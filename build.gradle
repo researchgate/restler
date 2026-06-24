@@ -63,7 +63,7 @@ project(":restler-core") {
 
     dependencies {
         api group: 'dev.morphia.morphia', name: 'morphia-core', version: '2.4.20'
-        api group: 'org.mongodb', name: 'mongodb-driver-sync', version: '4.11.1'
+        api group: 'org.mongodb', name: 'mongodb-driver-sync', version: '4.11.5'
 
         api group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.21.4'
 
