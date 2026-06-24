@@ -171,8 +171,11 @@ public class EntityResultSerializationTest {
         EntityResult<Object> deserialized = mapper.readValue(json, new TypeReference<>(){});
         assertEquals(1L, (long) deserialized.getTotalItems());
         assertNotNull(deserialized.getMultimap());
-        deserialized.getMultimap().getItems().values()
-                .forEach(innerList -> innerList.getItems().forEach(itemValueVerifier));
+        for (EntityList<Object> innerList : deserialized.getMultimap().getItems().values()) {
+            for (Object item : innerList.getItems()) {
+                itemValueVerifier.accept(item);
+            }
+        }
         assertNull(deserialized.getList());
         assertNull(deserialized.getMap());
     }
@@ -227,7 +230,10 @@ public class EntityResultSerializationTest {
         EntityMultimap<Object> deserialized = mapper.readValue(json, new TypeReference<>(){});
         assertEquals(1, deserialized.getItems().size());
         assertEquals(1L, (long) deserialized.getTotalItems());
-        deserialized.getItems().values()
-                .forEach(innerList -> innerList.getItems().forEach(itemValueVerifier));
+        for (EntityList<Object> innerList : deserialized.getItems().values()) {
+            for (Object item : innerList.getItems()) {
+                itemValueVerifier.accept(item);
+            }
+        }
     }
 }
