@@ -1,6 +1,5 @@
 package net.researchgate.restler.service.resources;
 
-import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import net.researchgate.restdsl.exceptions.RestDslException;
@@ -20,6 +19,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * Account resource
  */
@@ -32,7 +34,7 @@ public class AccountResource extends ServiceResource<Account, ObjectId> {
 
     private static final ServiceQueryParams SERVICE_QUERY_PARAMS =
             ServiceQueryParamsImpl.builder()
-                    .defaultFields(Sets.newHashSet("id", "mentorAccountId", "publicationUids", "deleted"))
+                    .defaultFields(new HashSet<>(Set.of("id", "mentorAccountId", "publicationUids", "deleted")))
 //                    .addDefaultCriteriaItem("deleted", Collections.singletonList(false))
                     .defaultLimit(13)
                     .build();

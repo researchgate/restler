@@ -1,13 +1,14 @@
 package net.researchgate.restler.service.resources;
 
+import io.dropwizard.testing.DropwizardTestSupport;
 import io.dropwizard.testing.ResourceHelpers;
-import io.dropwizard.testing.junit.DropwizardAppRule;
 import net.researchgate.restler.RestlerApplication;
 import net.researchgate.restler.domain.Publication;
 import net.researchgate.restler.service.config.RestlerConfig;
 import org.glassfish.jersey.client.JerseyClientBuilder;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
-import org.junit.Rule;
 import org.junit.Test;
 
 import javax.ws.rs.client.Client;
@@ -24,9 +25,18 @@ import static org.junit.Assert.assertNotEquals;
  */
 public class PublicationResourceTest {
 
-    @Rule
-    public DropwizardAppRule<RestlerConfig> APP =
-            new DropwizardAppRule<>(RestlerApplication.class, ResourceHelpers.resourceFilePath("config.yaml"));
+    public static final DropwizardTestSupport<RestlerConfig> APP =
+            new DropwizardTestSupport<>(RestlerApplication.class, ResourceHelpers.resourceFilePath("config.yaml"));
+
+    @BeforeClass
+    public static void setUp() throws Exception {
+        APP.before();
+    }
+
+    @AfterClass
+    public static void tearDown() {
+        APP.after();
+    }
 
     //TODO: make sure headers are propagated
     @Test

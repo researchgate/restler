@@ -18,7 +18,8 @@ public class ObjectIdDeserializer extends JsonDeserializer<ObjectId> {
     public ObjectId deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
         if (jp.getCurrentToken() != JsonToken.VALUE_STRING) {
             LOGGER.info("Could not convert string to ObjectId. Expected JsonToken.VALUE_STRING, got " + jp.getCurrentToken() + ".");
-            throw ctxt.mappingException("Could not convert string to ObjectId. Expected JsonToken.VALUE_STRING, got " + jp.getCurrentToken() + ".");
+            return ctxt.reportInputMismatch(ObjectId.class,
+                    "Could not convert string to ObjectId. Expected JsonToken.VALUE_STRING, got %s.", jp.getCurrentToken());
         }
         String objectIdStr = jp.getText();
         return new ObjectId(objectIdStr);

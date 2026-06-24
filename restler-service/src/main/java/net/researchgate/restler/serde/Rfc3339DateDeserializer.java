@@ -28,19 +28,22 @@ public class Rfc3339DateDeserializer extends JsonDeserializer<Date> {
 
         if (jp.getCurrentToken() != JsonToken.VALUE_STRING) {
             LOGGER.info("Could not convert string to date. Expected JsonToken.VALUE_STRING, got " + jp.getCurrentToken() + ".");
-            throw ctxt.mappingException("Could not convert string to date. Expected JsonToken.VALUE_STRING, got " + jp.getCurrentToken() + ".");
+            return ctxt.reportInputMismatch(Date.class,
+                    "Could not convert string to date. Expected JsonToken.VALUE_STRING, got %s.", jp.getCurrentToken());
         }
 
         String formattedDate = jp.getText();
         if (formattedDate == null) {
             LOGGER.info("Could not convert string to date. Expected JsonToken.VALUE_STRING, got null / " + jp.getCurrentToken() + ".");
-            throw ctxt.mappingException("Could not convert string to date. Expected JsonToken.VALUE_STRING, got null / " + jp.getCurrentToken() + ".");
+            return ctxt.reportInputMismatch(Date.class,
+                    "Could not convert string to date. Expected JsonToken.VALUE_STRING, got null / %s.", jp.getCurrentToken());
         }
         try {
             date = parseRFC3339Date(formattedDate);
         } catch (ParseException e) {
             LOGGER.info("Could not convert string to date. ", e);
-            throw ctxt.mappingException("Could not convert string to date. " + e.getMessage());
+            return ctxt.reportInputMismatch(Date.class,
+                    "Could not convert string to date. %s", e.getMessage());
         }
 
         return date;

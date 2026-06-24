@@ -1,6 +1,5 @@
 package net.researchgate.restler.service.dao;
 
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import dev.morphia.Datastore;
@@ -16,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -52,7 +52,7 @@ public class AccountDao extends MongoServiceDao<Account, ObjectId> {
     }
 
     public Account changeAccountMentor(ServiceQuery<ObjectId> q, ObjectId mentorId) throws RestDslException {
-        return findAndModify(q, Lists.newArrayList(UpdateOperators.set("mentorAccountId", mentorId)));
+        return findAndModify(q, new ArrayList<>(List.of(UpdateOperators.set("mentorAccountId", mentorId))));
     }
 
 }

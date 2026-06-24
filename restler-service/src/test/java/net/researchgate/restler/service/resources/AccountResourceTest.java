@@ -5,10 +5,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.squarespace.jersey2.guice.JerseyGuiceUtils;
-import io.dropwizard.jersey.guava.OptionalMessageBodyWriter;
-import io.dropwizard.jersey.guava.OptionalParamFeature;
-import io.dropwizard.testing.junit.ResourceTestRule;
+import io.dropwizard.testing.junit5.ResourceExtension;
 import net.researchgate.restdsl.exceptions.RestDslException;
 import net.researchgate.restdsl.queries.PatchContext;
 import net.researchgate.restdsl.queries.ServiceQuery;
@@ -27,12 +24,10 @@ import net.researchgate.restler.service.model.PublicationModel;
 import net.researchgate.restler.service.modules.TestRestlerModule;
 import net.researchgate.restler.service.util.MongoDContainerRule;
 import org.bson.types.ObjectId;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.testcontainers.containers.GenericContainer;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.client.Entity;
@@ -44,10 +39,7 @@ import java.util.List;
 import java.util.Random;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Account resource test
@@ -61,40 +53,41 @@ public class AccountResourceTest {
     @Inject
     private AccountModel accountModel;
 
-    @Rule
-    public ResourceTestRule resources = getResources();
+    // Shared across all test methods — AccountResource is stateless, DB state is
+    // reset per-test via @Before, so one Jersey container for the whole class is safe.
+    private static ResourceExtension resources;
 
     private static Injector injector;
 
-    @ClassRule
-    public static final MongoDContainerRule MONGODB = new MongoDContainerRule("testDb");
-
-    private ResourceTestRule getResources() {
-        return ResourceTestRule.builder()
-                .addResource(injector.getInstance(AccountResource.class))
-                .addProvider(OptionalMessageBodyWriter.class)
-                .addProvider(OptionalParamFeature.class)
-                .addProvider(new ServiceExceptionMapper())
-                .setRegisterDefaultExceptionMappers(false)
-                .build();
-    }
+    private static final MongoDContainerRule MONGODB = new MongoDContainerRule("testDb");
 
     private static Random rnd = new Random();
 
-    static {
-        JerseyGuiceUtils.install((s, serviceLocator) -> null);
-    }
-
-    @BeforeClass
-    public static void setUp() {
+    @BeforeAll
+    public static void setUp() throws Throwable {
         MONGODB.start();
         injector = Guice.createInjector(new TestRestlerModule(MONGODB));
         MONGODB.getDatastore().getMapper().map(Account.class);
         MONGODB.getDatastore().getMapper().map(Publication.class);
         MONGODB.getDatastore().ensureIndexes();
+
+        resources = ResourceExtension.builder()
+                .addResource(injector.getInstance(AccountResource.class))
+                .addProvider(new ServiceExceptionMapper())
+                .setRegisterDefaultExceptionMappers(false)
+                .build();
+        resources.before();
     }
 
-    @Before
+    @AfterAll
+    public static void tearDownClass() throws Throwable {
+        if (resources != null) {
+            resources.after();
+        }
+        MONGODB.stop();
+    }
+
+    @BeforeEach
     public void setUpTest() {
         MONGODB.getDatastore().getDatabase().drop();
         MONGODB.getDatastore().ensureIndexes();
@@ -317,8 +310,8 @@ public class AccountResourceTest {
                 PatchContext.builder().unsetFields(Sets.newHashSet("publicationUids", "nickname")).build());
         assertEquals(patchedAccount.getId(), returnedAccount.getId());
 
-        assertEquals(null, returnedAccount.getNickname());
-        assertEquals(null, returnedAccount.getPublicationUids());
+        assertNull(returnedAccount.getNickname());
+        assertNull(returnedAccount.getPublicationUids());
     }
 
     private Account getPatchedAccount(Account newAccount) {
@@ -345,19 +338,19 @@ public class AccountResourceTest {
         int total = 10;
         for (int i = 0; i < total; i++) {
             Response resp = postAccount(randomMockedAccount(i));
-            assertTrue(resp.getStatus() == 201);
+            assertEquals(201, resp.getStatus());
         }
 
         EntityResult<Account> res =
                 accountModel.get(ServiceQuery.<ObjectId>builder().limit(0).build());
 
-        assertTrue(res.getTotalItems() == total);
-        assertTrue(res.getList().getItems().size() == 0);
+        assertEquals(total, (long) res.getTotalItems());
+        assertTrue(res.getList().getItems().isEmpty());
 
         for (int limit = 0; limit < 2 * total; limit++) {
             for (int offset = 0; offset < 2 * total; offset++) {
                 res = accountModel.get(ServiceQuery.<ObjectId>builder().limit(limit).offset(offset).build());
-                assertTrue("For limit=" + limit + " and offset=" + offset, res.getTotalItems() == total);
+                assertEquals(total, (long) res.getTotalItems(), "For limit=" + limit + " and offset=" + offset);
                 assertTrue(res.getList().getItems().size() <= limit);
             }
         }
@@ -378,7 +371,7 @@ public class AccountResourceTest {
         account = response.readEntity(Account.class);
 
         ObjectId mentorId = new ObjectId();
-        Account account1 = accountModel.changeMentor(account.getId(), mentorId);
+        accountModel.changeMentor(account.getId(), mentorId);
         EntityResult<Account> dbAccount = accountModel.get(account.getId());
         ObjectId dbMentorId = dbAccount.asList().get(0).getMentorAccountId();
         assertEquals(mentorId, dbMentorId);

@@ -18,9 +18,10 @@ import net.researchgate.restdsl.results.EntityList;
 import net.researchgate.restdsl.results.EntityMultimap;
 import net.researchgate.restdsl.results.EntityResult;
 import org.bson.Document;
-import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.testcontainers.containers.GenericContainer;
 
@@ -44,11 +45,11 @@ public class ServiceDaoTest {
 
     public static GenericContainer mongoDBContainer = new GenericContainer("mongo:4.4").withExposedPorts(27017);
 
-    private Datastore fakedDatastore;
-    private MongoClient client;
+    private static Datastore fakedDatastore;
+    private static MongoClient client;
 
-    @Before
-    public void setUp() {
+    @BeforeClass
+    public static void setUp() {
         mongoDBContainer.start();
 
         ConnectionString uri = new ConnectionString("mongodb://" + mongoDBContainer.getHost() + ":" + mongoDBContainer.getMappedPort(27017));
@@ -79,11 +80,21 @@ public class ServiceDaoTest {
         }
     }
 
-    @After
-    public void tearDown() throws Exception {
-        // Clean up resources.
-        mongoDBContainer.stop();
+    @Before
+    public void resetTestEntityCollection() {
+        // Drop and recreate the collection so leaked indexes (e.g. the unique index from
+        // testDuplicateKey_throws) are gone. The collection must exist before constructing
+        // TestServiceDao because MongoBaseServiceDao calls listIndexes() in its constructor.
+        var col = fakedDatastore.getCollection(TestEntity.class);
+        String collectionName = col.getNamespace().getCollectionName();
+        col.drop();
+        fakedDatastore.getDatabase().createCollection(collectionName);
+    }
+
+    @AfterClass
+    public static void tearDown() {
         client.close();
+        mongoDBContainer.stop();
     }
 
     @Test

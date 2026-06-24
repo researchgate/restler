@@ -2,29 +2,19 @@ package net.researchgate.restler.service.mongo;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mongodb.ConnectionString;
-import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientSettings;
-import com.mongodb.MongoClientURI;
-import com.mongodb.MongoException;
 import com.mongodb.ReadPreference;
 import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClientFactory;
 import com.mongodb.client.MongoClients;
-import com.mongodb.event.ConnectionPoolListener;
 import io.dropwizard.lifecycle.Managed;
-import io.dropwizard.setup.Environment;
+import io.dropwizard.core.setup.Environment;
 import org.bson.codecs.Codec;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
-import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
+import javax.validation.constraints.NotEmpty;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -205,10 +195,6 @@ public class MongoClientBuilder {
     public MongoClient build(Environment environment) {
         final MongoClient mongoClient = buildUnmanaged();
         environment.lifecycle().manage(new Managed() {
-            @Override
-            public void start() throws Exception {
-            }
-
             @Override
             public void stop() throws Exception {
                 LOGGER.info("Closing mongo client: {}", mongoClient);

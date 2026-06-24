@@ -1,8 +1,8 @@
 package net.researchgate.restdsl.results;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Preconditions;
 
 import java.util.Collection;
@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 /**
  * Represents results in the form of mapping between some ids and entities
  */
-@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({"items", "totalItems"})
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class EntityMap<T> implements EntityContainer<T> {
