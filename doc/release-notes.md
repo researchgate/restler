@@ -1,5 +1,34 @@
 # Changelog
 
+### 7.0.0
+
+Major release upgrading the runtime platform to Java 17.
+
+#### Breaking changes
+
+* **Java 17 required** — minimum JVM raised from Java 11 to Java 17.
+* **Guice 4.2.2 → 6.0.0** — Guice 6 removed several deprecated APIs and tightened circular-dependency detection. Review any direct Guice usage for removed APIs.
+* **`commons-collections` removed** — the transitive `commons-collections:3.2.1` dependency is gone. If your code relied on it implicitly, add an explicit dependency or migrate to standard Java (`Collection.isEmpty()`, `new ArrayList<>()`, `new HashSet<>()`).
+
+#### Dependency upgrades (`restler-core`)
+
+| Dependency | Old | New        |
+|---|---|------------|
+| Java | 11 | 17         |
+| Jackson databind | 2.14.2 | 2.21.4     |
+| Guice | 4.2.2 | 6.0.0      |
+| mongodb-driver-sync | 4.10.2 | 4.11.5     |
+| Guava | 18.0 | 32.1.3-jre |
+| commons-lang3 | 3.4 | 3.14.0     |
+| swagger-annotations | 2.0.1 | 2.2.25     |
+| javax.ws.rs-api | 2.0.1 | 2.1.1      |
+
+#### Removed transitive dependencies
+
+* `commons-collections:3.2.1`
+
+---
+
 ### 6.1.5
 
 * Bump Morphia from 2.4.15 to 2.4.20 to incorporate performance improvements on point queries
