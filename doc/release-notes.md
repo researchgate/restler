@@ -1,5 +1,9 @@
 # Changelog
 
+### 7.1.0
+
+* Add template method `validatePatch` to `ServiceResource` to allow for validation field unsets.
+
 ### 7.0.0
 
 Major release upgrading the runtime platform to Java 17.
