@@ -3,11 +3,11 @@ package net.researchgate.restdsl.resources;
 import com.mongodb.BasicDBObject;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import net.researchgate.restdsl.annotations.PATCH;
 import net.researchgate.restdsl.exceptions.RestDslException;
 import net.researchgate.restdsl.model.ServiceModel;
+import net.researchgate.restdsl.queries.PatchContext;
 import net.researchgate.restdsl.queries.ServiceQuery;
 import net.researchgate.restdsl.util.RequestUtil;
 
@@ -51,8 +51,9 @@ public abstract class ServiceResource<V, K> extends BaseServiceResource<V, K> {
 
     @PATCH
     public V patchEntity(V entity, @Context UriInfo uriInfo) throws RestDslException {
-        validatePatchEntity(entity);
-        return serviceModel.patch(entity, RequestUtil.getPatchContext(uriInfo));
+        PatchContext context = RequestUtil.getPatchContext(uriInfo);
+        validatePatch(entity, context);
+        return serviceModel.patch(entity, context);
     }
 
     @Path(PATH_SEGMENT_PATTERN)
@@ -85,6 +86,10 @@ public abstract class ServiceResource<V, K> extends BaseServiceResource<V, K> {
 
     protected void validatePostEntity(V entity) throws RestDslException {
         // override if you need extra validation
+    }
+
+    protected void validatePatch(V entity, PatchContext context) throws RestDslException {
+        validatePatchEntity(entity);
     }
 
     protected void validatePatchEntity(V entity) throws RestDslException {
