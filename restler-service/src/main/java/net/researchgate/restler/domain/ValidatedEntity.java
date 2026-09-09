@@ -74,7 +74,7 @@ public class ValidatedEntity {
 
     @Override
     public String toString() {
-        return "ValidatedEntityDao{" +
+        return "ValidatedEntity{" +
                 "id=" + id +
                 ", notNullField='" + notNullField + '\'' +
                 ", positiveField=" + positiveField +
