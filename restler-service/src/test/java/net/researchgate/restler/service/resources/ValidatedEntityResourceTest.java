@@ -341,7 +341,7 @@ public class ValidatedEntityResourceTest {
         String url = String.format("http://localhost:%d%s/validated-entities/{id}", APP.getLocalPort(),
                 APP.getEnvironment().getApplicationContext().getContextPath());
         try (Response response = client.target(url)
-                .resolveTemplate("id", id)
+                .resolveTemplate("id", id.toHexString())
                 .request()
                 .put(Entity.entity(entity, MediaType.APPLICATION_JSON_TYPE))) {
 
