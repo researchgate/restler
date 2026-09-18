@@ -194,8 +194,8 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
     }
 
     public EntityResult<V> get(ServiceQuery<K> serviceQuery) throws RestDslException {
-        Query<V> morphiaQuery = convertToMorphiaQuery(serviceQuery);
         FindOptions findOptions = toFindOptions(serviceQuery);
+        Query<V> morphiaQuery = convertToMorphiaQuery(serviceQuery, findOptions);
 
         try (MetricSinkTimingWrapper ignored = getQueryShapeWrapper(serviceQuery)) {
             String groupBy = serviceQuery.getGroupBy();
@@ -203,7 +203,7 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
                 List<V> results = Collections.emptyList();
                 if (!serviceQuery.getCountOnly()) {
                     LOGGER.debug("Executing query {}", morphiaQuery);
-                    try (MorphiaCursor<V> iterator = morphiaQuery.iterator(findOptions)) {
+                    try (MorphiaCursor<V> iterator = morphiaQuery.iterator()) {
                         results = iterator.toList();
                     }
                 }
@@ -219,11 +219,11 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
                 for (Object k : criteriaForGrouping) {
                     serviceQuery.getCriteria().removeAll(groupBy);
                     serviceQuery.getCriteria().put(groupBy, k);
-                    Query<V> q = convertToMorphiaQuery(serviceQuery);
+                    Query<V> q = convertToMorphiaQuery(serviceQuery, findOptions);
                     List<V> resultPerKey = Collections.emptyList();
                     if (!serviceQuery.getCountOnly()) {
                         LOGGER.debug("Executing query {}", q);
-                        try (MorphiaCursor<V> iterator = q.iterator(findOptions)) {
+                        try (MorphiaCursor<V> iterator = q.iterator()) {
                             resultPerKey = iterator.toList();
                         }
                     }
@@ -237,11 +237,11 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
     }
 
     public V getOne(ServiceQuery<K> serviceQuery) throws RestDslException {
-        return convertToMorphiaQuery(serviceQuery).first(toFindOptions(serviceQuery));
+        return convertToMorphiaQuery(serviceQuery, toFindOptions(serviceQuery)).first();
     }
 
     public long count(ServiceQuery<K> serviceQuery) throws RestDslException {
-        return convertToMorphiaQuery(serviceQuery).count();
+        return convertToMorphiaQuery(serviceQuery, new FindOptions()).count();
     }
 
     public int delete(K id) {
@@ -251,10 +251,10 @@ public class MongoBaseServiceDao<V, K> implements BaseServiceDao<V, K>{
                 .getDeletedCount());
     }
 
-    Query<V> convertToMorphiaQuery(ServiceQuery<K> serviceQuery) throws RestDslException {
+    Query<V> convertToMorphiaQuery(ServiceQuery<K> serviceQuery, FindOptions findOptions) throws RestDslException {
         validateQuery(serviceQuery);
 
-        Query<V> mongoQuery = datastore.find(entityClazz);
+        Query<V> mongoQuery = datastore.find(entityClazz, findOptions);
 
         Collection<K> ids = serviceQuery.getIdList();
         if (ids != null) {
