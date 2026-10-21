@@ -12,6 +12,7 @@ import dev.morphia.Datastore;
 import dev.morphia.DeleteOptions;
 import dev.morphia.ModifyOptions;
 import dev.morphia.UpdateOptions;
+import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
 import dev.morphia.query.updates.UpdateOperator;
 import dev.morphia.query.updates.UpdateOperators;
@@ -100,7 +101,7 @@ public class MongoServiceDao<V, K> extends MongoBaseServiceDao<V, K> implements 
             throw new RestDslException("Deletion query should either provide ids or criteria", RestDslException.Type.QUERY_ERROR);
         }
         preDelete(serviceQuery);
-        Query<V> query = convertToMorphiaQuery(serviceQuery);
+        Query<V> query = convertToMorphiaQuery(serviceQuery, new FindOptions());
         return Math.toIntExact(query.delete(new DeleteOptions().multi(true)).getDeletedCount());
     }
 
@@ -132,7 +133,7 @@ public class MongoServiceDao<V, K> extends MongoBaseServiceDao<V, K> implements 
 
     protected UpdateResult update(ServiceQuery<K> q, List<UpdateOperator> updateOperations) throws RestDslException {
         preUpdate(q, updateOperations);
-        Query<V> morphiaQuery = convertToMorphiaQuery(q);
+        Query<V> morphiaQuery = convertToMorphiaQuery(q, new FindOptions());
         return morphiaQuery.update(new UpdateOptions().multi(true), updateOperations.toArray(new UpdateOperator[0]));
     }
 
@@ -155,7 +156,7 @@ public class MongoServiceDao<V, K> extends MongoBaseServiceDao<V, K> implements 
 
     protected V findAndModify(ServiceQuery<K> q, List<UpdateOperator> updateOperations, ModifyOptions options) throws RestDslException {
         preUpdate(q, updateOperations);
-        Query<V> morphiaQuery = convertToMorphiaQuery(q);
+        Query<V> morphiaQuery = convertToMorphiaQuery(q, new FindOptions());
 
         try {
             return morphiaQuery.modify(options, updateOperations.toArray(new UpdateOperator[0]));

@@ -28,6 +28,15 @@ subprojects {
         }
 
         repositories {
+            // Example for passing credentials from 1Password:
+            //
+            // 1. Create a classic personal access token on GitHub with "repo, write:packages" permissions
+            // 2. Authorize that token to "researchgate" GitHub org
+            // 4. Store your GitHub token in 1Password in the "Personal" vault with name "GitHub"
+            // 5. The 1Password should contain a "username" field and a "password" field
+            // 6. Set username environment variable: `export GITHUB_ACTOR='op://Personal/GitHub/username'`
+            // 7. Set password environment variable: `export GITHUB_TOKEN='op://Personal/GitHub/password'`
+            // 8. Release using 1Password CLI: `op run -- ./gradlew release`
             maven {
                 name = "GitHubPackages"
                 url = "https://maven.pkg.github.com/researchgate/restler"
@@ -62,8 +71,8 @@ project(":restler-core") {
     }
 
     dependencies {
-        api group: 'dev.morphia.morphia', name: 'morphia-core', version: '2.4.20'
-        api group: 'org.mongodb', name: 'mongodb-driver-sync', version: '4.11.5'
+        api group: 'dev.morphia.morphia', name: 'morphia-core', version: '2.5.3'
+        api group: 'org.mongodb', name: 'mongodb-driver-sync', version: '5.12.0'
 
         api group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.21.4'
 

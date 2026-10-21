@@ -1,5 +1,11 @@
 # Changelog
 
+### 8.0.0
+
+* full support for MongoDB 8.0 - 8.3 features, including OIDC authentication
+* Breaking changes:
+  * Upgraded MongoDB driver from 4.11.5 to 5.12.0 - this drops support for MongoDB 4.0
+
 ### 7.1.0
 
 * Add template method `validatePatch` to `ServiceResource` to allow for validation field unsets.
